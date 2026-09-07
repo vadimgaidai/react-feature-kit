@@ -11,6 +11,11 @@ if [[ -z "$FILE_PATH" ]] || [[ -z "$CONTENT" ]]; then
   exit 0
 fi
 
+# Only source files can contain imports — skip docs, configs, etc.
+if [[ "$FILE_PATH" != *.ts && "$FILE_PATH" != *.tsx && "$FILE_PATH" != *.js && "$FILE_PATH" != *.jsx ]]; then
+  exit 0
+fi
+
 # Skip files inside shared/ui itself (barrel exports are fine there)
 if [[ "$FILE_PATH" == *"/shared/ui/"* ]]; then
   exit 0

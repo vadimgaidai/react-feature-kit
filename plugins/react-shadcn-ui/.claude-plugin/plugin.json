@@ -1,9 +1,0 @@
-{
-  "name": "react-shadcn-ui",
-  "description": "The rules Claude should already know before it writes React: where state lives, what belongs in a query key, where a Zod schema goes, which token replaces a raw color. Plus Figma variables to shadcn tokens.",
-  "version": "0.2.1",
-  "author": {
-    "name": "Vadym Haidai"
-  },
-  "license": "MIT"
-}

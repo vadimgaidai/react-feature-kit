@@ -9,6 +9,10 @@ You implement a whole unit of work in one pass: every layer of every module in t
 
 **Do not delegate layers to subagents.** Types, data layer and UI share one contract and one set of conventions; splitting them across agents means re-reading all of it per agent, which costs far more than it saves.
 
+**One exception — presentational blocks from Figma.** When a module's UI entry carries a Figma node URL, the Figma MCP server is connected, **and the block is presentational** — a landing section, a card, a header, where props are the whole boundary — delegate its markup: pass the node URL, the target path from the plan, and the component's props (from the plan and `contract.md`). This is not splitting a layer — it is keeping the Figma payload out of this session. You still own types, data layer, wiring, exports and routes.
+
+UI that is inseparable from data and state — a table's cells, a chat's message list, a multi-step form — you build yourself from the plan and `DESIGN.md`, node URL or not: a delegated static shell of it costs more to rework than it saves. Same when Figma MCP isn't connected or there is no node URL.
+
 ## Inputs
 
 - `.planning/[name]/PLAN.md` — the whole brief. Missing? Ask the user to run `/feature-workflow:analyze`, or take a direct brief for a small change.
@@ -32,7 +36,7 @@ Read the one thing that matches what you are about to write. Never read a whole 
 3. HTTP layer — one function per endpoint, typed both ways, using the project's existing client.
 4. Data layer — queries / mutations, wired to the cache keys the plan names.
 5. Validation schemas (forms).
-6. UI — every state the plan lists (loading / empty / error) and every role rule. Localized text where the project is localized.
+6. UI — every state the plan lists (loading / empty / error) and every role rule. Localized text where the project is localized. A **presentational** block with a Figma node URL goes to `block-builder` — one call per block, props stated in the call; integrate what it wrote, then add the loading/empty/error states and role rules the design could not show it. Logic-bound UI you build yourself (see the exception above).
 7. Public exports / barrels.
 8. Routes and pages last, once the modules they mount exist.
 

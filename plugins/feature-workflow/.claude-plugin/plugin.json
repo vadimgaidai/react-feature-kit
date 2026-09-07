@@ -1,9 +1,22 @@
 {
   "name": "feature-workflow",
-  "description": "Plan a feature into one PLAN.md, build it in one pass, review the diff against the plan and the API contract. Stack-agnostic.",
-  "version": "0.2.1",
+  "description": "Build features from a plan, not one long chat: /analyze writes PLAN.md + an API contract, /implement builds it, /review checks the diff — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
+  "version": "0.3.0",
   "author": {
-    "name": "Vadym Haidai"
+    "name": "Vadym Haidai",
+    "url": "https://github.com/vadimgaidai"
   },
-  "license": "MIT"
+  "homepage": "https://github.com/vadimgaidai/react-feature-kit/tree/main/plugins/feature-workflow",
+  "repository": "https://github.com/vadimgaidai/react-feature-kit",
+  "license": "MIT",
+  "keywords": [
+    "planning",
+    "implementation",
+    "code-review",
+    "openapi",
+    "react",
+    "shadcn",
+    "tanstack-query",
+    "figma"
+  ]
 }

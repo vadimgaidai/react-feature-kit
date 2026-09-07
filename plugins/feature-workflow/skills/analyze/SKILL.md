@@ -9,6 +9,20 @@ You plan a unit of work and produce **one** file. You write no production code �
 
 **One request = one PLAN.md**, even when it spans several modules. Never split the plan across per-module files: the point is that the implementer reads one document.
 
+## 0 — Shape of the request
+
+Classify before asking anything. The shape decides how much interview and plan the work deserves:
+
+| Shape | What it looks like | What happens |
+|---|---|---|
+| **block** | One presentational block from a design — a hero, a pricing card, a header | No plan. Reply "run `@feature-workflow:block-builder <node-url> → <path>`" and stop. Without Figma MCP, treat as a one-module layout. |
+| **layout** | A page assembled from blocks — a landing, a marketing page | Short interview, light plan: a block table + an assembly module. |
+| **feature** | Behavior — data, forms, state: a table, a chat, a checkout | Full interview, full plan (below). |
+
+A block is a section or a self-contained composite, never an element: a page is typically 3–8 blocks, and buttons or inputs inside a block don't get their own URL. A request that mixes shapes (a landing with a working contact form) is a **feature** — plan the form as a module and the rest as blocks.
+
+For **layout** the interview shrinks to: name, the node URL per block, which composites repeat across blocks (each repeated one becomes its own module, built once), i18n if there is text, and acceptance criteria ("assembled, responsive, matches the frames"). Contract, data layer, roles — n/a; don't ask about them.
+
 ## 1 — Q&A (one question per turn)
 
 Do NOT read the codebase at startup. Defer it until the questions are answered.
@@ -23,7 +37,7 @@ Cover, skipping whatever the user already answered:
 1. **Name & purpose** — kebab-case name, one sentence.
 2. **Modules & structure** — what gets created or changed, and in what order. If a structure skill is loaded (e.g. `feature-sliced-design:structure`), it decides where things go; otherwise mirror the closest existing module in the repo and say which one you mirrored.
 3. **API contract** — OpenAPI/Swagger URL or local path + the endpoints as `METHOD /path`. Never ask for request/response shapes; step 2 extracts them.
-4. **Design** — Figma frame/node URL(s), or "none".
+4. **Design** — Figma frame/node URL(s), or "none". For multi-block UI ask for a node URL **per block**, not one per feature — the implementer hands each block's URL to a builder agent.
 5. **UI** — what gets built; forms? lists? wraps an existing primitive?
 6. **UI states** — loading / empty / error. Mandatory for anything with UI.
 7. **Roles & permissions** — what renders conditionally, or "none".
@@ -50,6 +64,8 @@ One file. Lists and tables, no prose padding, no code samples.
 ```markdown
 # PLAN: [name]
 
+**Shape:** layout | feature
+
 ## Request
 The user's original request, verbatim.
 
@@ -67,7 +83,7 @@ The existing module this work mirrors (`path/to/module`), plus any structure ski
 | Method | Path | Used by | Auth |
 
 ## Design
-Figma frame/node URL(s), or "none".
+Figma frame/node URL(s), or "none". One node URL per UI block when the design has them.
 
 ## Per module
 
@@ -76,7 +92,7 @@ Figma frame/node URL(s), or "none".
 - **Types**: interfaces and unions, derived from the contract
 - **Data layer**: queries / mutations, and what each mutation invalidates
 - **Schemas**: field rules + defaults (forms only)
-- **UI**: components, props, which primitives they wrap
+- **UI**: components, props, which primitives they wrap; the block's Figma node URL when one exists
 
 *(repeat per module — keep each block this short)*
 
@@ -107,11 +123,12 @@ If a structure skill ships a scaffolder (the `feature-sliced-design` plugin does
 
 State the PLAN.md path and one next step:
 
-- Design present and the `react-shadcn-ui` plugin is installed → "Next: `@react-shadcn-ui:theme-sync` on the frame, then `/feature-workflow:implement`."
+- Design present → "Next: `@feature-workflow:theme-sync` on the frame, then `/feature-workflow:implement`."
 - Otherwise → "Next: `/feature-workflow:implement`."
 
 ## Quality bar
 
 - Unambiguous — the same PLAN produces the same code twice.
 - No invented shapes: anything API-shaped points at `contract.md`.
+- A block repeated across frames (the same card in two sections) is one module in the plan, built once — per-block builders can't see siblings, so dedup happens here or not at all.
 - Never run a full build or lint to answer a planning question.
