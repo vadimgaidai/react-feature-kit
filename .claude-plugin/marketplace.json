@@ -8,13 +8,13 @@
   "description": "React Feature Kit — build features from a plan, not one long chat: a plan/build/review workflow, React 19 + shadcn/ui conventions, Feature-Sliced Design guardrails.",
   "plugins": [
     {
-      "name": "feature-workflow",
+      "name": "react-feature-workflow",
       "author": {
         "name": "Vadym Haidai",
         "url": "https://github.com/vadimgaidai"
       },
-      "displayName": "Feature Workflow",
-      "source": "./plugins/feature-workflow",
+      "displayName": "React Feature Workflow",
+      "source": "./plugins/react-feature-workflow",
       "description": "Build features from a plan, not one long chat: /analyze writes PLAN.md + an API contract, /implement builds it, /review checks the diff — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
       "category": "workflow",
       "keywords": [
@@ -27,7 +27,7 @@
         "tanstack-query",
         "figma"
       ],
-      "version": "0.3.0"
+      "version": "0.5.0"
     },
     {
       "name": "feature-sliced-design",
@@ -40,7 +40,7 @@
       "description": "Feature-Sliced Design guardrails: a skill that answers layer and import questions, a module scaffolder, and hooks that reject a misplaced file or a wrong filename before it is written — not in review after.",
       "category": "architecture",
       "keywords": ["feature-sliced-design", "fsd", "architecture"],
-      "version": "0.1.3"
+      "version": "0.2.0"
     }
   ]
 }

@@ -1,21 +1,23 @@
 ---
 name: analyze
-description: Plans a unit of work. Interactive Q&A in the main session (one question per turn, recommended answer first), then writes ONE `.planning/[name]/PLAN.md` covering every module of the request. Use when the user wants to plan, spec, scope or start a feature, module or refactor. Never delegate to a subagent — AskUserQuestion does not surface from one.
+description: Plans a unit of work. Interactive Q&A in the main session (one question per turn, recommended answer first), then writes ONE `.planning/[name]/PLAN.md` covering every module of the request. A `block:` / `layout:` / `feature:` prefix on the request means the user classified it themselves; otherwise classify it from the request. Use when the user wants to plan, spec, scope or start a feature, module or refactor. Never delegate to a subagent — AskUserQuestion does not surface from one.
 ---
 
 # Analyze
 
-You plan a unit of work and produce **one** file. You write no production code — `/feature-workflow:implement` does, reading what you wrote.
+You plan a unit of work and produce **one** file. You write no production code — `/react-feature-workflow:implement` does, reading what you wrote.
 
 **One request = one PLAN.md**, even when it spans several modules. Never split the plan across per-module files: the point is that the implementer reads one document.
 
 ## 0 — Shape of the request
 
-Classify before asking anything. The shape decides how much interview and plan the work deserves:
+The shape is classified by whoever speaks first. A `block:`, `layout:` or `feature:` prefix — `/react-feature-workflow:analyze layout: build the landing from <url>` — means the user classified the request themselves: take that shape as given. If it clearly mismatches the request (a `layout:` request that includes form logic), say so in one line, then follow the prefix anyway — the user chose it.
+
+Without a prefix, classify the shape yourself before asking anything. The shape decides how much interview and plan the work deserves:
 
 | Shape | What it looks like | What happens |
 |---|---|---|
-| **block** | One presentational block from a design — a hero, a pricing card, a header | No plan. Reply "run `@feature-workflow:block-builder <node-url> → <path>`" and stop. Without Figma MCP, treat as a one-module layout. |
+| **block** | One presentational block from a design — a hero, a pricing card, a header | No plan. Reply "run `@react-feature-workflow:block-builder <node-url> → <path>`" and stop. Without Figma MCP, treat as a one-module layout. |
 | **layout** | A page assembled from blocks — a landing, a marketing page | Short interview, light plan: a block table + an assembly module. |
 | **feature** | Behavior — data, forms, state: a table, a chat, a checkout | Full interview, full plan (below). |
 
@@ -106,7 +108,7 @@ Rules, or "none".
 Namespace + key list, or "n/a".
 
 ## Acceptance Criteria
-- [ ] 3–7 checkable statements. `/feature-workflow:review` verifies these.
+- [ ] 3–7 checkable statements. `/react-feature-workflow:review` verifies these.
 
 ## Out of scope
 Explicit non-goals.
@@ -123,8 +125,8 @@ If a structure skill ships a scaffolder (the `feature-sliced-design` plugin does
 
 State the PLAN.md path and one next step:
 
-- Design present → "Next: `@feature-workflow:theme-sync` on the frame, then `/feature-workflow:implement`."
-- Otherwise → "Next: `/feature-workflow:implement`."
+- Design present → "Next: `@react-feature-workflow:theme-sync` on the frame, then `/react-feature-workflow:implement`."
+- Otherwise → "Next: `/react-feature-workflow:implement`."
 
 ## Quality bar
 

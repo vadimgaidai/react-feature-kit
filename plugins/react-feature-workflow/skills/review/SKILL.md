@@ -9,7 +9,7 @@ Scope is **the diff**, not the modules it touches. Do not read whole files where
 
 ## 0 — Focus
 
-An argument, when given, names the passes to run — `correctness`, `contract`, `consistency`, `perf` — separated by commas or spaces (`/feature-workflow:review contract,perf`). Anything unrecognized, or no argument at all, runs all four.
+An argument, when given, names the passes to run — `correctness`, `contract`, `consistency`, `perf` — separated by commas or spaces (`/react-feature-workflow:review contract,perf`). Anything unrecognized, or no argument at all, runs all four.
 
 A focused run is a **shorter report over the same hunks**, never a wider read. Scope stays the diff, section 1 still runs, and the passes you skipped go unmentioned rather than being reported as clean.
 

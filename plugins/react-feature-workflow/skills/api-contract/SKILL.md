@@ -24,8 +24,6 @@ Re-run with more endpoints to extend the slice. It is deterministic and safe to 
 
 Per operation: parameters table, request body and every response as an annotated example object where each leaf reads `type REQUIRED` or `type optional`, plus the explicit `Required:` list, enums expanded, `$ref`s inlined (cycle-safe), and the security scheme.
 
-Typical result: a 17k-character contract becomes ~3k for three endpoints.
-
 ## Rules
 
 - The slice is **authoritative**. When it disagrees with prose in a plan, ticket or comment, the slice wins — say so, then follow it.

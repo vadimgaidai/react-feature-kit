@@ -1,0 +1,127 @@
+# React Feature Workflow
+
+A plan / build / review workflow for [Claude Code](https://claude.com/claude-code), plus self-loading React conventions and Figma agents. The workflow core works in any TypeScript project; the React skills load only where they apply.
+
+`/analyze` interviews you and writes the spec to disk: `PLAN.md` plus an API contract sliced from your OpenAPI spec, so field names come from the backend rather than from Claude. `/implement` builds from those files in a fresh session; `/review` checks the diff against them in a third, so the reviewer hasn't just written the code it judges. Figma frames are read by subagents that return components and a short report — the payloads never enter your session.
+
+## Install
+
+```bash
+# from the repository root
+claude plugin marketplace add vadimgaidai/react-feature-kit
+claude plugin install react-feature-workflow@vadimgaidai --scope project
+```
+
+Keep `--scope project` (the default is `user` — the plugin would load in every project you open), then commit the `.claude/settings.json` it writes. From a running session, use `/plugin` and pick project scope. Details: [Getting started](../../docs/GETTING-STARTED.md), [Claude Code plugin docs](https://code.claude.com/docs/en/discover-plugins).
+
+## Three kinds of work
+
+`analyze` classifies the request first — a block, a page, or a feature — and scales the interview and the plan to it. Or classify it yourself with a prefix — `analyze block: …`, `analyze layout: …`, `analyze feature: …` — then the shape is your call, not the model's. Each of these is worked end to end, with what comes back and where each command stops, in [Use cases](../../docs/USE-CASES.md).
+
+### A block — a hero, a card, a header
+
+No planning. One subagent call:
+
+```
+@react-feature-workflow:block-builder https://figma.com/design/XX/landing?node-id=42-15 into src/widgets/hero
+```
+
+Builds the block from shadcn primitives and semantic tokens — flex/grid, no `fixed` — and reports every design value that had no token. Running `analyze` on a single block tells you exactly this and stops.
+
+### A page — a landing assembled from blocks
+
+```
+/react-feature-workflow:analyze build the landing from https://figma.com/design/XX/landing
+```
+
+The interview is short: page name, one Figma node URL **per block** (a block is a section — hero, pricing, footer), which composites repeat, text/i18n, and what "done" means. No API questions — there is no data. Then:
+
+```
+/react-feature-workflow:implement
+```
+
+Each block goes to `block-builder` — one subagent call per block, so the Figma payloads never touch your session — and the implementer assembles the page. Run `@react-feature-workflow:theme-sync` once beforehand so blocks map onto tokens that match the design.
+
+### A feature — a table, a chat, a checkout: anything with data and state
+
+Three commands, **each in a fresh session**:
+
+```
+/react-feature-workflow:analyze add comments to articles
+```
+
+Claude asks a handful of questions, one at a time, each with a recommended answer: name, endpoints (a Swagger URL plus a list like `GET /articles/{id}/comments`), the UI and its loading/empty/error states, permissions, and what counts as done. It doesn't ask what it can find out itself. It writes two files to `.planning/comments/`:
+
+- `contract.md` — request/response shapes for the endpoints you named, pulled from your OpenAPI spec with `$ref`s resolved;
+- `PLAN.md` — modules in build order: types, queries and what they invalidate, form schemas, components with their states, i18n keys, acceptance criteria.
+
+**Read the plan** — it's a normal markdown file; fix it before any code exists. Then, in fresh sessions:
+
+```
+/react-feature-workflow:implement    # builds the plan in order, runs your typecheck
+/react-feature-workflow:review       # checks the diff against the plan and the contract
+```
+
+`implement` follows your project's conventions (it reads `CLAUDE.md` and one existing module of the same kind), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` reports; it applies a change only when you ask, or when the fix is mechanical and unambiguous — and it names what it applied. Narrow it with `/react-feature-workflow:review contract` (or `correctness`, `consistency`, `perf`).
+
+### A bug
+
+Skip the workflow entirely:
+
+```
+@react-feature-workflow:bug-fixer the comment form submits twice on slow connections
+```
+
+A subagent reproduces it, finds the cause and fixes it with the smallest change.
+
+## What's inside
+
+**Commands and agents** — the things you invoke:
+
+| Command | What it does |
+|---|---|
+| `/react-feature-workflow:analyze` | Classifies the request, interviews you accordingly, writes `PLAN.md` + a trimmed API contract |
+| `/react-feature-workflow:implement` | Builds everything in the plan, in order, and runs your typecheck |
+| `/react-feature-workflow:review` | Checks the diff against the plan and the contract |
+| `/react-feature-workflow:api-contract` | Trims a Swagger/OpenAPI spec to the endpoints you name, standalone |
+| `@react-feature-workflow:block-builder` | Builds one presentational block from a Figma node URL |
+| `@react-feature-workflow:theme-sync` | Maps a Figma file's variables onto your shadcn tokens, light and dark |
+| `@react-feature-workflow:bug-fixer` | Reproduces and fixes one bug |
+| a hook | Runs Prettier on every file Claude writes or edits |
+
+**Convention skills** — these load themselves when relevant; you never invoke them, and they cost no context until they apply:
+
+| Skill | What it covers |
+|---|---|
+| `react` | React 19 and the Compiler: state, effects, memoization, Suspense, Actions and `use` |
+| `tanstack-query` | Query keys, `enabled` / `select` / `useQueries`, how a mutation touches the cache |
+| `ui-conventions` | Semantic tokens instead of raw colors, extending primitives, dark-mode-safe spacing and icons |
+| `react-hook-form-zod` | Where schemas live, the `z.input === z.output` rule, the usual resolver errors |
+
+## Theme sync
+
+Run once per design, before building blocks against it:
+
+```
+@react-feature-workflow:theme-sync https://www.figma.com/design/XXXX/my-design-system
+```
+
+Reads the Figma variables, maps them onto shadcn's semantic tokens by role, writes the light **and** dark palettes into your CSS, and reports every variable that had no counterpart.
+
+## Keeping the context small
+
+- Run `implement` and `review` in **fresh sessions**. Everything they need is in `.planning/<name>/`; the planning conversation adds nothing to the build, and a session reviewing code it just wrote is biased toward approving it.
+- Point at the plan by path, don't paste it.
+- One `.planning/<name>/` folder per unit of work, so `implement` has a single authoritative brief.
+- Keep the agents as subagents: they read far more than they report.
+- One concern per session — a bug fix folded into a feature build produces a diff `review` can't check against the plan.
+
+## Requirements
+
+- The Prettier hook shells out to `node`.
+- `theme-sync` and `block-builder` need the [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/) connected. Without it, `implement` simply builds all UI itself.
+- The convention skills assume React; in a non-React project they never load and the workflow runs as-is.
+
+## License
+
+MIT. Part of [React Feature Kit](https://github.com/vadimgaidai/react-feature-kit).

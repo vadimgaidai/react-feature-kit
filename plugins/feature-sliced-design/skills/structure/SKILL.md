@@ -86,3 +86,4 @@ Open the **one** file that matches what you are writing, never the set:
 | mutations | [references/mutations.md](references/mutations.md) |
 | types, unions, `as const` sets | [references/typing.md](references/typing.md) |
 | a public barrel | [references/barrels.md](references/barrels.md) |
+| a UI component — which folder | [references/ui.md](references/ui.md) |

@@ -1,5 +1,5 @@
 ---
-name: shadcn-ui
+name: ui-conventions
 description: shadcn/ui + Tailwind conventions — semantic tokens instead of raw colors, extending primitives via ComponentProps, compound components, icon and spacing rules that survive dark mode. Use when building or fixing UI on shadcn/Tailwind, wrapping a primitive, or deciding how to style a component.
 ---
 
@@ -7,11 +7,13 @@ description: shadcn/ui + Tailwind conventions — semantic tokens instead of raw
 
 ## Use a primitive before writing one
 
-1. Does an installed primitive already cover this? Use it directly (`@/shared/ui/[name]` or wherever the project keeps them) — import the module, not a barrel.
+1. Does an installed primitive already cover this? Use it directly — `@/components/ui/[name]` in a default shadcn setup, or wherever the project's `components.json` puts them. Import the module, not a barrel.
 2. Not installed? Search the registry with the `shadcn` MCP server and add it with the CLI. Don't hand-roll a Dialog.
 3. Wrapping a primitive? Extend its prop type via `ComponentProps<typeof X>` and forward `...rest` — see [references/extending-components.md](references/extending-components.md).
 4. Two or more tightly coupled sub-components? Compound Component Pattern with a `.Root` — see [references/compound-component.md](references/compound-component.md).
 5. Otherwise one exported component per file, props as an interface.
+
+Domain wrappers live with the code that owns them, never in the shadcn-managed primitives folder — that folder belongs to the CLI and stays flat. (In a Feature-Sliced project the `structure` skill decides the exact layer.)
 
 ## Styling
 
@@ -34,7 +36,7 @@ description: shadcn/ui + Tailwind conventions — semantic tokens instead of raw
 - One file does one thing: fetch, map, or render. Growing state moves into a `use-*` hook.
 - Loading, empty and error are real states, not afterthoughts. A list that renders nothing on empty is a bug.
 
-The reference files use placeholders — `[entity]` kebab-case, `[Entity]` PascalCase, `I[Entity]`/`T[Entity]` type identifiers. Real infrastructure (`httpClient`, primitives under `@/shared/ui/`) keeps its real name.
+The reference files use placeholders — `[name]` kebab-case, `[Name]` PascalCase, `I[Name]` type identifiers. Real infrastructure (the primitives folder, `cn`) keeps its real name; swap the import paths for the project's own aliases.
 
 ## Never
 

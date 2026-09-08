@@ -1,62 +1,43 @@
 # React Feature Kit
 
-Two plugins for [Claude Code](https://claude.com/claude-code): a plan → build → review workflow for React features, and Feature-Sliced Design structure enforcement.
+Two plugins for [Claude Code](https://claude.com/claude-code): a plan / build / review workflow for React features, and Feature-Sliced Design structure enforcement.
 
-## Why
-
-Building a feature in one long chat fails in predictable ways. The kit answers each:
-
-| Problem | What the kit does |
-|---|---|
-| Quality drops as the context fills, and there is no spec to check the result against | Three commands in **separate short sessions** — plan, build, review — with `PLAN.md` and an API contract on disk as the handoff |
-| Figma payloads, OpenAPI specs and bug reproductions eat the context window | Heavy reads go to subagents; only the finding returns to your session |
-| Conventions get re-explained in every prompt | Self-loading skills (React 19, TanStack Query, shadcn/ui, forms) and FSD hooks that reject a misplaced file before it is written |
+The workflow is organized around keeping the context window small and the API honest. Request and response shapes are cut out of your OpenAPI spec by a script, so field names are never guessed. Figma frames are read inside subagents that return components and a short report, not payloads. The plan is a file on disk, so building and reviewing run in fresh sessions without the planning chat. Module skeletons come from a shell script, not from generation.
 
 ## Install
 
 ```bash
-/plugin marketplace add vadimgaidai/react-feature-kit
-/plugin install feature-workflow@vadimgaidai       # plan / build / review + React conventions + Figma agents
-/plugin install feature-sliced-design@vadimgaidai  # FSD structure — only if the project uses FSD
+# from the repository root
+claude plugin marketplace add vadimgaidai/react-feature-kit
+claude plugin install react-feature-workflow@vadimgaidai --scope project       # plan / build / review + React conventions + Figma agents
+claude plugin install feature-sliced-design@vadimgaidai --scope project  # FSD structure — only if the project uses FSD
 ```
 
-`feature-workflow` is the one you need. `feature-sliced-design` is separate on purpose: its hooks actively reject files that don't fit FSD layers — enforcement you opt into per project.
+Keep `--scope project` — without it the install defaults to `user` scope and the plugins load in every project you open. Scopes, what gets written to `.claude/settings.json`, teammates' setup and requirements: [docs/GETTING-STARTED.md](./docs/GETTING-STARTED.md).
 
 ## Which command do I run?
 
+`/analyze` classifies every request as one of three shapes — a block, a page, or a feature — and scales the interview and the plan to it.
+
 | You want… | Run |
 |---|---|
-| one block from a Figma frame as a component | `@feature-workflow:block-builder <node-url> → <path>` — no planning needed |
-| a landing / marketing page from a Figma file | `@feature-workflow:theme-sync` once, then `/feature-workflow:analyze` |
-| a feature with an API, forms or state | `/feature-workflow:analyze` → `/feature-workflow:implement` → `/feature-workflow:review`, each in a fresh session |
-| the app theme to match a design | `@feature-workflow:theme-sync <figma-url>` |
-| one bug fixed | `@feature-workflow:bug-fixer <describe the bug>` |
-| an OpenAPI spec trimmed to the endpoints you use | `/feature-workflow:api-contract` |
+| one block from a Figma frame as a component | `@react-feature-workflow:block-builder <node-url> into <path>` — no planning needed |
+| a landing / marketing page from a Figma file | `@react-feature-workflow:theme-sync` once, then `/react-feature-workflow:analyze` |
+| a feature with an API, forms or state | `/react-feature-workflow:analyze`, then `/react-feature-workflow:implement`, then `/react-feature-workflow:review`, each in a fresh session |
+| the app theme to match a design | `@react-feature-workflow:theme-sync <figma-url>` |
+| one bug fixed | `@react-feature-workflow:bug-fixer <describe the bug>` |
+| an OpenAPI spec trimmed to the endpoints you use | `/react-feature-workflow:api-contract` |
 
-Not sure which shape your request is? Run `/feature-workflow:analyze` — classifying the request is its first step. The convention skills and FSD hooks need no commands at all: they apply themselves while Claude writes code.
+Not sure which shape your request is? Run `/react-feature-workflow:analyze` — classifying the request is its first step. Or classify it yourself with a prefix: `/react-feature-workflow:analyze layout: build the landing from <url>` (also `block:` and `feature:`) — with a prefix the shape is your call, without one `analyze` determines it from the request.
+
+Seven situations worked end to end — a feature with an API, a landing assembled from Figma blocks, a rebrand, a contract that drifted — are in [docs/USE-CASES.md](./docs/USE-CASES.md), including what each command writes to disk and where it stops instead of guessing.
 
 ## The plugins
 
-- **[feature-workflow](./plugins/feature-workflow)** — the three workflow commands, four self-loading React convention skills, and three subagents (`theme-sync`, `block-builder`, `bug-fixer`). Full walkthrough in its README.
-- **[feature-sliced-design](./plugins/feature-sliced-design)** — a `structure` skill that answers layer and import-boundary questions, a deterministic scaffolder, and three hooks that reject a misplaced file, a non-kebab-case filename or a barrel import at write time. Needs `jq`.
+- **[react-feature-workflow](./plugins/react-feature-workflow)** — `/analyze`, `/implement`, `/review` and `/api-contract`; four convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) that load themselves as Claude writes the matching layer; three subagents (`theme-sync`, `block-builder`, `bug-fixer`) that keep Figma payloads and bug reproductions out of your session. Full walkthrough in its README.
+- **[feature-sliced-design](./plugins/feature-sliced-design)** — a `structure` skill, a module scaffolder, and three `Write|Edit` hooks that reject a misplaced file, a non-kebab-case filename or a barrel import at write time, so the mistake never reaches review. Needs `jq`.
 
-## Setting it up for a repo
-
-Put the marketplace in the repo's `.claude/settings.json` so everyone who clones it gets the same setup:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "vadimgaidai": { "source": { "source": "github", "repo": "vadimgaidai/react-feature-kit" } }
-  },
-  "enabledPlugins": {
-    "feature-workflow@vadimgaidai": true,
-    "feature-sliced-design@vadimgaidai": true
-  }
-}
-```
-
-This records what the project expects; each person still runs `/plugin install` once. [react-shadcn-ts-template](https://github.com/vadimgaidai/react-shadcn-ts-template) is a working example.
+The reasoning behind the shape of the kit — what stays out of the context window, why the contract outranks the plan, why `implement` doesn't fan out — is in [docs/DESIGN.md](./docs/DESIGN.md).
 
 ## Third-party skills
 
@@ -66,16 +47,9 @@ This repo contains only original work. Install other people's skills from their 
 npx skills@latest add shadcn/ui -s shadcn -y
 ```
 
-## Development
+## Contributing
 
-```bash
-claude --plugin-dir ./plugins/feature-workflow
-/reload-plugins        # re-read the directories after an edit
-```
-
-**Bump the version or the change never ships.** `claude plugin update` compares `version` against the installed copy and copies nothing if it matches, ignoring commits entirely. Bump it in both `plugins/<name>/.claude-plugin/plugin.json` and the marketplace entry — `claude plugin tag` refuses a release where the two disagree.
-
-`claude plugin validate plugins/<name>/skills` checks every skill's frontmatter (pointed at the plugin root it reads the manifest only). It won't catch a dead `references/*.md` link or a `name` that doesn't match its directory — `claude plugin eval` (cases under `evals/`) is the real check.
+Dev loop, checks and the release rule live in [CONTRIBUTING.md](./CONTRIBUTING.md). `./scripts/check-all.sh` runs everything CI runs.
 
 ## License
 
