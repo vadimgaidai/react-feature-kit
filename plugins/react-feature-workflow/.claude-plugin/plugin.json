@@ -1,7 +1,7 @@
 {
   "name": "react-feature-workflow",
   "description": "Build features from a plan, not one long chat: /analyze writes PLAN.md + an API contract, /implement builds it, /review checks the diff — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "author": {
     "name": "Vadym Haidai",
     "url": "https://github.com/vadimgaidai"

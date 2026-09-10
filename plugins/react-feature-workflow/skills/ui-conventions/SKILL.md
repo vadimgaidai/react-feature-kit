@@ -23,6 +23,8 @@ Domain wrappers live with the code that owns them, never in the shadcn-managed p
 - **`gap-*` over `space-y/x-*`** — space utilities break on wrapping and on flex direction changes.
 - `className` on an exported component is for **layout positioning only** (margins, grid placement). Anything else belongs inside the component or in a variant.
 - Spacing and sizes come from the Tailwind scale. A raw px value is a signal the design has no matching token — surface that rather than hardcoding it.
+- **A Tailwind scale class is a claim about the project's theme, not about default Tailwind.** A project that resets a namespace in `@theme` (`--<ns>-*: initial`) keeps only the keys it redefines — every other class in that namespace **silently emits no CSS**: no type error, no lint error, just a missing style (a reset radius scale that redefines only `xs`/`sm`/`md` makes `rounded-xl` a no-op). This holds for any tokenized namespace — radius, spacing, font-size, color — the example is not the rule. Before the first use of a scale class from a namespace, check the project's `@theme` / `global.css` for it; if the namespace is reset, only the keys listed there exist. (If the project runs `eslint-plugin-better-tailwindcss` with `no-unknown-classes`, the check is machine-enforced — don't re-verify by hand.)
+- A design value with no matching token: use the nearest existing token, or **ask the user** before adding a token to `@theme`. An arbitrary bracket value (`rounded-[12px]`, `text-[13px]`, `gap-[7px]`) is never the answer for a property that has a token scale — brackets are reserved for values no scale owns (`backdrop-blur-[200px]`).
 
 ## Icons
 
@@ -41,5 +43,5 @@ The reference files use placeholders — `[name]` kebab-case, `[Name]` PascalCas
 ## Never
 
 - Copy a primitive's source to tweak one style — extend it.
-- Reach for an arbitrary Tailwind value (`w-[327px]`) when a scale step or token fits.
+- Reach for an arbitrary Tailwind value (`w-[327px]`) when a scale step or token fits — or invent a scale class without confirming the key exists in the project's `@theme`.
 - Ship a component that only looks right in one theme.

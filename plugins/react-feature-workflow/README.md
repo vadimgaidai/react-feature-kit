@@ -64,6 +64,8 @@ Claude asks a handful of questions, one at a time, each with a recommended answe
 
 `implement` follows your project's conventions (it reads `CLAUDE.md` and one existing module of the same kind), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` reports; it applies a change only when you ask, or when the fix is mechanical and unambiguous — and it names what it applied. Narrow it with `/react-feature-workflow:review contract` (or `correctness`, `consistency`, `perf`).
 
+Saw something wrong before running `review`? `/react-feature-workflow:refine move the filters above the table` applies your corrections against the same plan — and when you changed your mind rather than the implementation missing something, it updates `PLAN.md` too, so `review` still verifies the current truth. Anything that is really new scope (a new module, endpoint or dependency) it routes back to `analyze` instead of quietly absorbing it.
+
 ### A bug
 
 Skip the workflow entirely:
@@ -82,6 +84,7 @@ A subagent reproduces it, finds the cause and fixes it with the smallest change.
 |---|---|
 | `/react-feature-workflow:analyze` | Classifies the request, interviews you accordingly, writes `PLAN.md` + a trimmed API contract |
 | `/react-feature-workflow:implement` | Builds everything in the plan, in order, and runs your typecheck |
+| `/react-feature-workflow:refine` | Applies your corrections to what `implement` built, keeping `PLAN.md` in sync |
 | `/react-feature-workflow:review` | Checks the diff against the plan and the contract |
 | `/react-feature-workflow:api-contract` | Trims a Swagger/OpenAPI spec to the endpoints you name, standalone |
 | `@react-feature-workflow:block-builder` | Builds one presentational block from a Figma node URL |

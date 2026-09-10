@@ -24,6 +24,7 @@ Keep `--scope project` — without it the install defaults to `user` scope and t
 | one block from a Figma frame as a component | `@react-feature-workflow:block-builder <node-url> into <path>` — no planning needed |
 | a landing / marketing page from a Figma file | `@react-feature-workflow:theme-sync` once, then `/react-feature-workflow:analyze` |
 | a feature with an API, forms or state | `/react-feature-workflow:analyze`, then `/react-feature-workflow:implement`, then `/react-feature-workflow:review`, each in a fresh session |
+| changes to what was just built, before review | `/react-feature-workflow:refine <what to change>` — fixes against the same plan, updates `PLAN.md` when you changed your mind |
 | the app theme to match a design | `@react-feature-workflow:theme-sync <figma-url>` |
 | one bug fixed | `@react-feature-workflow:bug-fixer <describe the bug>` |
 | an OpenAPI spec trimmed to the endpoints you use | `/react-feature-workflow:api-contract` |

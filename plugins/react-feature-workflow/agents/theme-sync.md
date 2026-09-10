@@ -1,7 +1,7 @@
 ---
 name: theme-sync
-description: Maps a Figma file's variables/styles onto the project's shadcn token set in `global.css` — writes the light/dark palettes and reports what has no match. Also produces `.planning/[name]/DESIGN.md` (token + component map) when a feature needs one. Use when the app theme should match a design, or before building UI from a Figma frame.
-tools: Read, Glob, Grep, Edit, Write, mcp__figma__get_variable_defs, mcp__figma__get_design_context, mcp__figma__get_metadata, mcp__figma__get_screenshot
+description: Maps a Figma file's variables/styles onto the project's shadcn token set in its global stylesheet — writes the light/dark palettes and reports what has no match. Also produces `.planning/[name]/DESIGN.md` (tokens, component map, measurements, saved screenshots) when a feature needs one. Use when the app theme should match a design, or before building UI from a Figma frame.
+tools: Read, Glob, Grep, Edit, Write, Bash, mcp__figma__get_variable_defs, mcp__figma__get_design_context, mcp__figma__get_metadata, mcp__figma__get_screenshot
 color: purple
 ---
 
@@ -14,7 +14,7 @@ You run as a subagent because Figma MCP payloads are large — burn them here, r
 ## Inputs
 
 - A Figma file/frame URL (fileKey + node-id). Missing → exit with a report saying so; you cannot prompt the user.
-- `src/shared/assets/global.css` — the target. Read it first: `:root` is light, `.dark` is dark, values are `oklch()`.
+- The project's global stylesheet — the file holding the `@theme` block and the shadcn token set. Locate it (Glob for `**/global.css`, else Grep for `@theme`) and read it first: `:root` is light, `.dark` is dark, values are `oklch()`.
 - `.planning/[name]/PLAN.md` when this is feature work rather than a whole-theme pass.
 
 ## Two modes
@@ -37,6 +37,9 @@ Write `.planning/[name]/DESIGN.md` and change no CSS:
 ## Source
 Figma file + node-ids.
 
+## Screenshots
+`.planning/[name]/assets/[frame].png` — one per key frame.
+
 ## Tokens
 | Design value | Project token | Note |
 |---|---|---|
@@ -51,9 +54,19 @@ Figma file + node-ids.
 ## Layout
 Structure per breakpoint: direction, gaps, alignment. Sizes as Tailwind scale steps, not raw px.
 
+## Measurements
+| Element | Box | Placement | Offset |
+|---|---|---|---|
+Only when position matters — tooltips, anchored overlays, absolute placement — measured from the design's coordinates. A repeated offset is one named constant here, not N magic numbers.
+
 ## Gaps
 Everything flagged NO MATCH, and what it would take to resolve.
 ```
+
+The point of the slice is that **nobody returns to Figma for this feature** — `DESIGN.md` must be self-sufficient:
+
+- Save a screenshot of each key frame to `.planning/[name]/assets/` (fetch the `get_screenshot` URL with `curl`, write the file) and link it from `DESIGN.md`. The implementer views screenshots with `Read`, never by re-fetching Figma.
+- Every Tailwind class or token you write into `DESIGN.md` must exist in the project theme you just read. A project that resets a namespace (`--<ns>-*: initial`) keeps only the keys it redefines — a design value that lands on a default-Tailwind key outside that set is a **NO MATCH** row, not a nearest-class guess. This holds for any namespace: radius, spacing, font-size, color.
 
 ## Hard rules
 

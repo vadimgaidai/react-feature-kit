@@ -17,7 +17,7 @@ UI that is inseparable from data and state — a table's cells, a chat's message
 
 - `.planning/[name]/PLAN.md` — the whole brief. Missing? Ask the user to run `/react-feature-workflow:analyze`, or take a direct brief for a small change.
 - `.planning/[name]/contract.md` — **authoritative for every request/response shape.** Read it; never re-fetch the raw OpenAPI, never invent a field it does not list.
-- `.planning/[name]/DESIGN.md` when the plan names a design. A value flagged "no match" is a real gap: surface it, don't invent one.
+- `.planning/[name]/DESIGN.md` when the plan names a design — **authoritative for tokens, spacing, layout and measurements. Never call Figma MCP for anything it answers; its saved screenshots are read with `Read`, not re-fetched.** The only Figma calls during implementation are `block-builder` delegations — one per presentational block; a static shell needs the real node payload, a slice can't replace it. A value flagged "no match" is a real gap: surface it, don't invent one.
 
 ## Learn the conventions before writing
 
@@ -25,7 +25,7 @@ In this order, cheapest first:
 
 1. The project's `CLAUDE.md` and `.claude/rules/` — project facts and machine-enforced rules.
 2. Any structure or library skill that applies — `structure` for placement, `tanstack-query` for the data layer, `react-hook-form-zod` for forms, `ui-conventions` and `react` for UI. Load the one that matches the layer you are on, not all of them.
-3. **The sibling module the plan names** — one existing module of the same kind, read once. It is the tone reference: file layout, naming, export style, error handling.
+3. **The sibling module the plan names** — one existing module of the same kind, read once. It is the tone reference — and **its folder shape is part of the convention**: subfolders (`components/`, `hooks/`), where types and constants live, what the barrel exports. Mirroring a sibling's runtime pattern while flattening its structure is a defect. (When a structure skill is loaded, it decides placement instead — the sibling rule is the fallback.)
 
 Read the one thing that matches what you are about to write. Never read a whole conventions library up front.
 
@@ -48,6 +48,9 @@ If the contract disagrees with the plan's prose, **the contract wins** — say s
 - A file does one thing (fetch / map / render). Extract a sub-component when JSX grows past ~80 lines, a hook when state grows, a helper when logic branches.
 - No `any`. No values guessed where a contract, token or existing constant exists.
 - Don't restate what machine checks already enforce — formatters and linters own formatting and naming. Never add a lint-disable to get past one.
+- Before creating a provider, context, hook or helper **inside** a feature/module folder, ask where the repo already keeps that role: the structure skill's layer rules when one is loaded, an existing top-level bucket (`src/providers/`, `src/contexts/`, `src/hooks/`, …) otherwise. Never invent a second home for a role that has one.
+- Never add, replace or major-upgrade a dependency the plan does not name. Needing one mid-implementation is a blocking question to the user, not a `pnpm add`.
+- When the plan's prose disagrees with an installed package's own types (`.d.ts`), **the types win** — follow them and report the deviation in the output. Same precedence as `contract.md` over prose.
 
 ## Verify
 
@@ -55,4 +58,4 @@ Run the project's typecheck. Do not run a full build or lint unless the project 
 
 ## Output
 
-Files created/edited, anything newly required (a package to install, a UI primitive to add), and anything in the plan you did **not** build, with the reason. Then: "Next: `/react-feature-workflow:review`."
+Files created/edited, anything newly required (a package to install, a UI primitive to add), and anything in the plan you did **not** build, with the reason. Then: "Next: `/react-feature-workflow:review`" — or `/react-feature-workflow:refine` first, when what you see needs changing.

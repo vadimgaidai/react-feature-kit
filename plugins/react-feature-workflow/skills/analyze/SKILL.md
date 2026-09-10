@@ -38,13 +38,14 @@ Cover, skipping whatever the user already answered:
 
 1. **Name & purpose** — kebab-case name, one sentence.
 2. **Modules & structure** — what gets created or changed, and in what order. If a structure skill is loaded (e.g. `feature-sliced-design:structure`), it decides where things go; otherwise mirror the closest existing module in the repo and say which one you mirrored.
-3. **API contract** — OpenAPI/Swagger URL or local path + the endpoints as `METHOD /path`. Never ask for request/response shapes; step 2 extracts them.
-4. **Design** — Figma frame/node URL(s), or "none". For multi-block UI ask for a node URL **per block**, not one per feature — the implementer hands each block's URL to a builder agent.
-5. **UI** — what gets built; forms? lists? wraps an existing primitive?
-6. **UI states** — loading / empty / error. Mandatory for anything with UI.
-7. **Roles & permissions** — what renders conditionally, or "none".
-8. **Acceptance criteria** — 3–7 checkable statements defining "done".
-9. **i18n** — namespace and keys, if the project is localized.
+3. **Dependencies** — when the work could plausibly be solved by a third-party package (or by replacing or major-upgrading an installed one), the library choice is a **blocking `AskUserQuestion` in this pass**, never a decision the plan makes silently. Present 2–3 candidates — version, React compatibility, bundle cost, last release — and lead with a recommendation. "No new dependency — build on what's installed" is always one of the options. Record the decision in the plan; `implement` may not add what the plan does not name.
+4. **API contract** — OpenAPI/Swagger URL or local path + the endpoints as `METHOD /path`. Never ask for request/response shapes; step 2 extracts them.
+5. **Design** — Figma frame/node URL(s), or "none". For multi-block UI ask for a node URL **per block**, not one per feature — the implementer hands each block's URL to a builder agent.
+6. **UI** — what gets built; forms? lists? wraps an existing primitive?
+7. **UI states** — loading / empty / error. Mandatory for anything with UI.
+8. **Roles & permissions** — what renders conditionally, or "none".
+9. **Acceptance criteria** — 3–7 checkable statements defining "done".
+10. **i18n** — namespace and keys, if the project is localized.
 
 Then check for collisions: does a module with this name already exist? If so, ask whether to extend or rename.
 
@@ -58,6 +59,15 @@ node "${CLAUDE_PLUGIN_ROOT}"/skills/api-contract/scripts/contract-slice.mjs \
 ```
 
 It writes exact request/response shapes with `$ref`s inlined — required vs optional, enums, formats. The implementer reads that file instead of the raw contract and never guesses a field.
+
+## 2b — Slice the design (skip when there is no Figma link)
+
+When the request carries Figma URL(s), dispatch the `theme-sync` agent in **feature mode** on the frame(s). It writes `.planning/[name]/DESIGN.md` — the design counterpart of `contract.md`: tokens, component map, layout, measurements, saved screenshots.
+
+Two hard rules:
+
+- **You never call Figma MCP tools yourself.** Figma payloads are large; they burn in the subagent, not in the planning session. Every design fact in the plan cites `DESIGN.md`.
+- **You never map a design value to a Tailwind class or token yourself.** That mapping is `theme-sync`'s job — it reads the project's `global.css` / `@theme` first, and a class written from memory of default Tailwind may not exist in a project that resets namespaces. The plan's design sections reference `DESIGN.md` rows; they do not restate or re-derive them.
 
 ## 3 — Write `.planning/[name]/PLAN.md`
 
@@ -85,7 +95,7 @@ The existing module this work mirrors (`path/to/module`), plus any structure ski
 | Method | Path | Used by | Auth |
 
 ## Design
-Figma frame/node URL(s), or "none". One node URL per UI block when the design has them.
+`.planning/[name]/DESIGN.md` — authoritative for tokens, spacing, layout and measurements. Plus the node URL per UI block when the design has them (block builders still need those). "none" when there is no design.
 
 ## Per module
 
@@ -125,7 +135,7 @@ If a structure skill ships a scaffolder (the `feature-sliced-design` plugin does
 
 State the PLAN.md path and one next step:
 
-- Design present → "Next: `@react-feature-workflow:theme-sync` on the frame, then `/react-feature-workflow:implement`."
+- Design present → `DESIGN.md` already exists from step 2b: "Next: `/react-feature-workflow:implement`." A whole-theme pass (`theme-sync` in theme mode) stays a separate, user-initiated run.
 - Otherwise → "Next: `/react-feature-workflow:implement`."
 
 ## Quality bar
