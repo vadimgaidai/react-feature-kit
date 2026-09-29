@@ -2,7 +2,7 @@
 
 Two plugins for [Claude Code](https://claude.com/claude-code): a plan / build / review workflow for React features, and Feature-Sliced Design structure enforcement.
 
-The workflow is organized around keeping the context window small and the API honest. Request and response shapes are cut out of your OpenAPI spec by a script, so field names are never guessed. Figma frames are read inside subagents that return components and a short report, not payloads. The plan is a file on disk, so building and reviewing run in fresh sessions without the planning chat. Module skeletons come from a shell script, not from generation.
+The workflow is organized around keeping the context window small and the API honest. Request and response shapes are cut out of your OpenAPI spec by a script, so field names are never guessed. Figma frames are read inside subagents that return components and a short report, not payloads. The plan is a file on disk, so building and reviewing run in fresh sessions without the planning chat. Module skeletons come from a shell script, not from generation, and the module a build mirrors is outlined by another rather than read.
 
 ## Install
 

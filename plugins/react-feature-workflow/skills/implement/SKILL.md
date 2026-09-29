@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Implements a planned unit of work end-to-end in one pass — types, data layer, schemas, UI, wiring — from `.planning/[name]/PLAN.md`. Use when the user wants to build, implement, or execute a plan, feature, module or issue. Runs in the main session; do not fan out to subagents.
+description: Implements a planned unit of work end-to-end in one pass — types, data layer, schemas, UI, wiring — from `.planning/[name]/PLAN.md`. Use when the user wants to build, implement, or execute a plan, feature, module or issue, or points at a `.planning/*/PLAN.md`. Invoke it before reading the plan or exploring the code — it says what to read and in what order. Runs in the main session; do not fan out to subagents.
 ---
 
 # Implement
@@ -9,14 +9,14 @@ You implement a whole unit of work in one pass: every layer of every module in t
 
 **Do not delegate layers to subagents.** Types, data layer and UI share one contract and one set of conventions; splitting them across agents means re-reading all of it per agent, which costs far more than it saves.
 
-**One exception — presentational blocks from Figma.** When a module's UI entry carries a Figma node URL, the Figma MCP server is connected, **and the block is presentational** — a landing section, a card, a header, where props are the whole boundary — delegate its markup: pass the node URL, the target path from the plan, and the component's props (from the plan and `contract.md`). This is not splitting a layer — it is keeping the Figma payload out of this session. You still own types, data layer, wiring, exports and routes.
+**One exception — presentational blocks from Figma.** When a module's UI entry carries a Figma node URL, the Figma MCP server is connected, **and the block is presentational** — a landing section, a card, a header, where props are the whole boundary — delegate its markup: pass the node URL, the target path from the plan, and the component's props (from the plan and `contract.md`). This is not splitting a layer — it is keeping the Figma payload out of this session. When the plan has several such blocks and none depends on another's output, launch all their `block-builder` delegations in one message so they run concurrently, then wire them once every report is back. You still own types, data layer, wiring, exports and routes.
 
 UI that is inseparable from data and state — a table's cells, a chat's message list, a multi-step form — you build yourself from the plan and `DESIGN.md`, node URL or not: a delegated static shell of it costs more to rework than it saves. Same when Figma MCP isn't connected or there is no node URL.
 
 ## Inputs
 
 - `.planning/[name]/PLAN.md` — the whole brief. Missing? Ask the user to run `/react-feature-workflow:analyze`, or take a direct brief for a small change.
-- `.planning/[name]/contract.md` — **authoritative for every request/response shape.** Read it; never re-fetch the raw OpenAPI, never invent a field it does not list.
+- `.planning/[name]/contract.md` — **authoritative for every request/response shape.** Read it; never open the raw OpenAPI/Swagger file it names as its `Source:` — not with `Read`, not with `cat` or `jq` — and never invent a field it does not list. The slice already carries every field, required flag, enum and format the spec has for these endpoints.
 - `.planning/[name]/DESIGN.md` when the plan names a design — **authoritative for tokens, spacing, layout and measurements. Never call Figma MCP for anything it answers; its saved screenshots are read with `Read`, not re-fetched.** The only Figma calls during implementation are `block-builder` delegations — one per presentational block; a static shell needs the real node payload, a slice can't replace it. A value flagged "no match" is a real gap: surface it, don't invent one.
 
 ## Learn the conventions before writing
@@ -25,9 +25,17 @@ In this order, cheapest first:
 
 1. The project's `CLAUDE.md` and `.claude/rules/` — project facts and machine-enforced rules.
 2. Any structure or library skill that applies — `structure` for placement, `tanstack-query` for the data layer, `react-hook-form-zod` for forms, `ui-conventions` and `react` for UI. Load the one that matches the layer you are on, not all of them.
-3. **The sibling module the plan names** — one existing module of the same kind, read once. It is the tone reference — and **its folder shape is part of the convention**: subfolders (`components/`, `hooks/`), where types and constants live, what the barrel exports. Mirroring a sibling's runtime pattern while flattening its structure is a defect. (When a structure skill is loaded, it decides placement instead — the sibling rule is the fallback.)
+3. **The sibling module the plan names** — outlined, not read:
+
+   ```bash
+   bash "${CLAUDE_PLUGIN_ROOT}"/skills/implement/scripts/sibling-outline.sh src/entities/article
+   ```
+
+   Run it before opening any file in the sibling. One call prints the folder shape, the barrel verbatim, every short file whole (with `path:line` on every line), every exported signature of the longer files at its `path:line`, the key factories and the external imports — the whole tone reference in a few dozen lines instead of a few hundred. What it printed whole you already have; do not `Read` it again. Read a range (`offset`/`limit`) of a longer file only where a signature is not enough — through `Read`, never `cat`, `sed -n`, `awk` or `tail`, so the cost stays visible — and never read a long sibling file whole or the module file by file. **Its folder shape is part of the convention**: subfolders (`components/`, `hooks/`), where types and constants live, what the barrel exports. Mirroring a sibling's runtime pattern while flattening its structure is a defect. (When a structure skill is loaded, it decides placement instead — the sibling rule is the fallback.)
 
 Read the one thing that matches what you are about to write. Never read a whole conventions library up front.
+
+Three hooks enforce the mechanical half of this — the spec stays closed, a long source file is not read without a `limit`, source files are not dumped through the shell. A refused call is not an obstacle to route around: do what its message says.
 
 ## Order (per module, in the plan's build order)
 
@@ -54,7 +62,7 @@ If the contract disagrees with the plan's prose, **the contract wins** — say s
 
 ## Verify
 
-Run the project's typecheck. Do not run a full build or lint unless the project has no other check — pre-commit hooks and CI own those.
+Run the project's typecheck. That is the whole verification. Do not run a full build or lint unless the project has no other check — pre-commit hooks and CI own those. Do not start the dev server, open a browser, or invoke the `run` skill: what the feature does in a browser is checked by `/react-feature-workflow:review` against the plan's acceptance criteria, and by the user. When the typecheck passes, write the report and stop.
 
 ## Output
 

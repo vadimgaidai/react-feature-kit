@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Structural checks for the marketplace and both plugins. Run via ./scripts/check-all.sh.
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
-import { join, dirname, resolve } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 
 const root = resolve(dirname(new URL(import.meta.url).pathname), "..");
 let failures = 0;
@@ -100,11 +100,101 @@ for (const plugin of plugins) {
   };
   collect(hooks);
   if (!commands.length) fail(`${hooksPath}: no commands found`);
+  const evalsDir = join(root, "plugins", plugin, "evals");
+  // only case files count — a README mention is documentation, not coverage
+  const evalText = existsSync(evalsDir)
+    ? listFiles(evalsDir)
+        .filter((f) => !f.includes(`${sep}results${sep}`) && !f.endsWith("README.md") && /\.(md|yaml|yml)$/.test(f))
+        .map((f) => readFileSync(f, "utf8"))
+        .join("\n")
+    : null;
   for (const cmd of commands) {
     const rel = cmd.replaceAll('"', "").replace("${CLAUDE_PLUGIN_ROOT}", "");
     const script = join(root, "plugins", plugin, rel);
     if (!existsSync(script)) fail(`${hooksPath}: ${rel} does not exist`);
     else if (!(statSync(script).mode & 0o111)) fail(`plugins/${plugin}${rel} is not executable`);
+    // a hook that is wired wrong fails silently — every script must be exercised by an eval case
+    const stem = basename(rel).replace(/\.[^.]+$/, "");
+    if (evalText !== null && !evalText.includes(stem))
+      fail(`${hooksPath}: ${basename(rel)} is not named (as "${stem}") in any eval case under plugins/${plugin}/evals/`);
+  }
+}
+
+function listFiles(dir) {
+  const out = [];
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) out.push(...listFiles(p));
+    else out.push(p);
+  }
+  return out;
+}
+
+// --- eval cases: a case file, graders, and a known grader type on each ---
+console.log("eval cases are well-formed");
+const GRADER_TYPES = new Set(["regex", "tool_order", "tool_used", "file_exists", "llm", "baseline"]);
+for (const plugin of plugins) {
+  const evalsDir = join(root, "plugins", plugin, "evals");
+  if (!existsSync(evalsDir)) continue;
+  for (const name of readdirSync(evalsDir)) {
+    if (name === "results" || name === "README.md") continue;
+    if (!statSync(join(evalsDir, name)).isDirectory()) continue;
+    const base = `plugins/${plugin}/evals/${name}`;
+    const hasCase = existsSync(join(root, base, "case.yaml"));
+    if (!hasCase && !existsSync(join(root, base, "prompt.md"))) {
+      fail(`${base}: needs a case.yaml or a prompt.md`);
+      continue;
+    }
+    if (hasCase) {
+      const text = readFileSync(join(root, base, "case.yaml"), "utf8");
+      if (!/^schema_version:/m.test(text)) fail(`${base}/case.yaml: no schema_version`);
+      const named = text.match(/^name:\s*(\S+)/m);
+      if (!named) fail(`${base}/case.yaml: no name`);
+      else if (named[1] !== name)
+        fail(`${base}/case.yaml: name "${named[1]}" != directory "${name}"`);
+      // scaffold_script and history_file are paths relative to the case directory —
+      // an inline block is read as a file name and fails at run time with ENAMETOOLONG
+      for (const key of ["scaffold_script", "history_file"]) {
+        const m = text.match(new RegExp(`^\\s+${key}:[ \\t]*(.*)$`, "m"));
+        if (!m) continue;
+        const value = m[1].trim().replace(/^["']|["']$/g, "");
+        if (value === "" || value === "|" || value === ">" || value.startsWith("|") || value.startsWith(">"))
+          fail(`${base}/case.yaml: ${key} must be a file in the case directory, not an inline block`);
+        else if (!existsSync(join(root, base, value)))
+          fail(`${base}/case.yaml: ${key} "${value}" does not exist in the case directory`);
+      }
+    }
+    const gradersDir = join(root, base, "graders");
+    if (!existsSync(gradersDir)) {
+      fail(`${base}: no graders/ directory`);
+      continue;
+    }
+    const graders = readdirSync(gradersDir).filter((f) => f.endsWith(".md"));
+    if (!graders.length) fail(`${base}/graders: no .md graders`);
+    for (const g of graders) {
+      const path = `${base}/graders/${g}`;
+      const fm = frontmatter(path);
+      if (!fm) {
+        fail(`${path}: no frontmatter block`);
+        continue;
+      }
+      // a stray quote inside a single-quoted value silently truncates the pattern
+      const block = readFileSync(join(root, path), "utf8").split(/^---$/m)[1] ?? "";
+      for (const line of block.split("\n")) {
+        const m = line.match(/^\w+:\s*'(.*)$/);
+        if (!m) continue;
+        const rest = m[1];
+        if (!rest.endsWith("'") || rest.slice(0, -1).replace(/''/g, "").includes("'"))
+          fail(`${path}: malformed single-quoted value: ${line.trim()}`);
+      }
+      if (!fm.type) fail(`${path}: frontmatter has no type`);
+      else if (!GRADER_TYPES.has(fm.type))
+        fail(`${path}: unknown grader type "${fm.type}" (${[...GRADER_TYPES].join(" | ")})`);
+      if (fm.type === "llm" && !fm.criteria) fail(`${path}: an llm grader needs criteria`);
+      if (fm.type === "regex" && !fm.pattern) fail(`${path}: a regex grader needs a pattern`);
+      if (fm.type === "file_exists" && !fm.path) fail(`${path}: a file_exists grader needs a path`);
+      if (fm.type === "tool_used" && !fm.tool) fail(`${path}: a tool_used grader needs a tool`);
+    }
   }
 }
 

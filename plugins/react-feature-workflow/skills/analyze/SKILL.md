@@ -37,7 +37,7 @@ Use `AskUserQuestion`, one question per turn, never a batch. Two rules:
 Cover, skipping whatever the user already answered:
 
 1. **Name & purpose** — kebab-case name, one sentence.
-2. **Modules & structure** — what gets created or changed, and in what order. If a structure skill is loaded (e.g. `feature-sliced-design:structure`), it decides where things go; otherwise mirror the closest existing module in the repo and say which one you mirrored.
+2. **Modules & structure** — what gets created or changed, and in what order. If a structure skill is loaded (e.g. `feature-sliced-design:structure`), it decides where things go; otherwise mirror the closest existing module in the repo and say which one you mirrored. Name it by path — `implement` outlines it with `skills/implement/scripts/sibling-outline.sh` rather than reading it, so the plan owes it a path, not a description.
 3. **Dependencies** — when the work could plausibly be solved by a third-party package (or by replacing or major-upgrading an installed one), the library choice is a **blocking `AskUserQuestion` in this pass**, never a decision the plan makes silently. Present 2–3 candidates — version, React compatibility, bundle cost, last release — and lead with a recommendation. "No new dependency — build on what's installed" is always one of the options. Record the decision in the plan; `implement` may not add what the plan does not name.
 4. **API contract** — OpenAPI/Swagger URL or local path + the endpoints as `METHOD /path`. Never ask for request/response shapes; step 2 extracts them.
 5. **Design** — Figma frame/node URL(s), or "none". For multi-block UI ask for a node URL **per block**, not one per feature — the implementer hands each block's URL to a builder agent.
