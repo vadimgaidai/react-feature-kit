@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: review-scoped-to-diff
+description: >
+  `/review` reads hunks, verifies each acceptance criterion with a `file:line` behind the
+  verdict, and catches the two defects planted in the diff — a field absent from the
+  contract, and an array index used as a list key.
+tags: [review, contract]
+plugins: ["../.."]
+
+execution:
+  prompt: |
+    Review the changes on this branch against the plan in `.planning/comments/`.
+  max_turns: 30
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Bash, Skill]
+
+context:
+  scaffold_script: scaffold.sh

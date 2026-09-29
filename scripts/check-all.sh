@@ -25,4 +25,6 @@ run "Node scripts parse" bash -c '
   exit $status
 '
 
+run "Scripts and eval fixtures behave" ./scripts/test-scripts.sh
+
 exit $fail

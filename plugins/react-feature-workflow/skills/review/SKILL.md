@@ -30,7 +30,7 @@ Include unstaged and untracked files. If a `.planning/*/PLAN.md` covers this wor
 
 **Contract** — every type and payload against `.planning/*/contract.md`: required vs optional, enums, nullability. A field that is not in the contract is a bug, not a nicety.
 
-**Consistency** — each changed file against the sibling module it should resemble, and against any structure skill that governs it. Name what you compared against.
+**Consistency** — each changed file against the sibling module it should resemble, and against any structure skill that governs it. Outline the sibling rather than reading it — `bash "${CLAUDE_PLUGIN_ROOT}"/skills/implement/scripts/sibling-outline.sh <module-dir>` — scope here is still the diff. Name what you compared against.
 
 **Performance** — render and data-layer cost, on the evidence in the diff. Not a profiling exercise: only the shapes below.
 

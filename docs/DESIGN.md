@@ -4,13 +4,18 @@ Why the kit is shaped the way it is. Everything here is about `react-feature-wor
 
 ## What stays out of the context window
 
-The main axis of the design. Five mechanisms, each replacing something that would otherwise be read, generated or pasted into the session:
+The main axis of the design. Six mechanisms, each replacing something that would otherwise be read, generated or pasted into the session:
 
 - **The contract is sliced, not read.** `contract-slice.mjs` cuts the OpenAPI/Swagger spec down to the endpoints the feature names and inlines every `$ref` into `contract.md` — required vs optional, enums, formats, nullability. `/implement` reads that file and never re-fetches the spec.
 - **Figma payloads live in subagents.** `block-builder` and `theme-sync` fetch the design context, write the files or the token map, and return a short report. The payload is spent in the subagent's window; the main session receives components, not JSON.
 - **Skeletons come from a script.** Where a structure plugin ships a scaffolder, `/analyze` runs it per module: directories, barrels and empty model files appear in one shell call, and generation spends tokens only on the code that differs per feature.
+- **The tone reference is outlined, not read.** `sibling-outline.sh` prints the module the plan names as its folder shape, its barrel, its short files whole (a signature of a ten-line file saves nothing and costs a `Read`), every exported signature of the longer files at a `path:line`, its key factories and its external imports — a few dozen lines where the module is a few hundred. A range read afterwards is allowed where a signature isn't enough; opening a long file whole is not.
 - **Each stage is a fresh session.** The plan and the contract are files, so `/implement` and `/review` start clean and read them from disk. The planning conversation adds nothing to the build, and a session reviewing code it just wrote is biased toward approving it.
 - **Formatting costs nothing.** A PostToolUse hook runs Prettier on every file written, so neither the implementer nor the reviewer spends output on formatting. The convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) load per layer as Claude writes — none of them occupies context until its layer is being written.
+
+## Skills guide, hooks enforce
+
+A skill is advice the model can decline, and the eval traces showed it doing exactly that: a baseline run read a whole module through `for f in …; do cat "$f"; done`, invisible to anything counting `Read` calls. So the mechanical half of the rules above is enforced by three `PreToolUse` hooks that exit 2 and hand the reason back — the spec a contract was sliced from is not opened again, by `Read` or by shell, the slicer being the one sanctioned reader; a source file over 300 lines is not read without a `limit`; source files are not dumped through `cat`, `head`, `sed` or `awk`. What a hook cannot check stays with the skill — the contract outranking the plan's prose, a deviation being reported, a folder shape being mirrored — and the eval suite covers both halves, with one case asking for the three shortcuts outright and expecting each refusal. `RFW_GUARDS=off` disables the guards for a session.
 
 ## The request is classified before it is planned
 

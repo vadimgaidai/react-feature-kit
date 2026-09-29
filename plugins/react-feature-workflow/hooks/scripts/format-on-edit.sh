@@ -16,7 +16,7 @@ case "$FILE" in
   */node_modules/*|*/dist/*|*/.git/*) exit 0 ;;
   *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.scss|*.html)
     if [ -f "$FILE" ]; then
-      cd "$CLAUDE_PROJECT_DIR" && npx --no-install prettier --write "$FILE" >/dev/null 2>&1 || true
+      cd "${CLAUDE_PROJECT_DIR:-.}" && npx --no-install prettier --write "$FILE" >/dev/null 2>&1 || true
     fi
     ;;
 esac

@@ -62,7 +62,7 @@ Claude asks a handful of questions, one at a time, each with a recommended answe
 /react-feature-workflow:review       # checks the diff against the plan and the contract
 ```
 
-`implement` follows your project's conventions (it reads `CLAUDE.md` and one existing module of the same kind), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` reports; it applies a change only when you ask, or when the fix is mechanical and unambiguous — and it names what it applied. Narrow it with `/react-feature-workflow:review contract` (or `correctness`, `consistency`, `perf`).
+`implement` follows your project's conventions (it reads `CLAUDE.md` and outlines one existing module of the same kind rather than reading it), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` reports; it applies a change only when you ask, or when the fix is mechanical and unambiguous — and it names what it applied. Narrow it with `/react-feature-workflow:review contract` (or `correctness`, `consistency`, `perf`).
 
 Saw something wrong before running `review`? `/react-feature-workflow:refine move the filters above the table` applies your corrections against the same plan — and when you changed your mind rather than the implementation missing something, it updates `PLAN.md` too, so `review` still verifies the current truth. Anything that is really new scope (a new module, endpoint or dependency) it routes back to `analyze` instead of quietly absorbing it.
 
@@ -90,7 +90,8 @@ A subagent reproduces it, finds the cause and fixes it with the smallest change.
 | `@react-feature-workflow:block-builder` | Builds one presentational block from a Figma node URL |
 | `@react-feature-workflow:theme-sync` | Maps a Figma file's variables onto your shadcn tokens, light and dark |
 | `@react-feature-workflow:bug-fixer` | Reproduces and fixes one bug |
-| a hook | Runs Prettier on every file Claude writes or edits |
+| a PostToolUse hook | Runs Prettier on every file Claude writes or edits |
+| three PreToolUse hooks | Refuse the shortcuts the skills rule out: re-reading the spec a contract was sliced from, reading a source file over 300 lines (1000 under `node_modules`) without a `limit`, dumping source files through the shell. `RFW_GUARDS=off` disables them for a session. |
 
 **Convention skills** — these load themselves when relevant; you never invoke them, and they cost no context until they apply:
 
@@ -121,7 +122,7 @@ Reads the Figma variables, maps them onto shadcn's semantic tokens by role, writ
 
 ## Requirements
 
-- The Prettier hook shells out to `node`.
+- The hooks shell out to `node`.
 - `theme-sync` and `block-builder` need the [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/) connected. Without it, `implement` simply builds all UI itself.
 - The convention skills assume React; in a non-React project they never load and the workflow runs as-is.
 
