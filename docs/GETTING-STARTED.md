@@ -7,6 +7,7 @@
 claude plugin marketplace add vadimgaidai/react-feature-kit
 claude plugin install react-feature-workflow@vadimgaidai --scope project
 claude plugin install feature-sliced-design@vadimgaidai --scope project  # only if the project uses FSD
+claude plugin install feature-folders@vadimgaidai --scope project       # otherwise — global buckets + feature/page/layout modules
 ```
 
 From a running Claude Code session the equivalent is `/plugin`: it opens an interactive picker and asks for the scope — choose **"Install for all collaborators on this repository (project scope)"**.
@@ -41,7 +42,8 @@ Commit it. It records what the project expects but installs nothing by itself: t
 
 ## Requirements
 
-- **`feature-sliced-design` needs `jq`.** Its hooks shell out to `jq`; without it they exit quietly instead of blocking a bad write, so the checks look live when they aren't. `brew install jq` / `apt install jq` before enabling the plugin.
+- **`feature-sliced-design` and `feature-folders` need `jq`.** Their hooks shell out to `jq`; without it they exit quietly instead of blocking a bad write, so the checks look live when they aren't. `brew install jq` / `apt install jq` before enabling either plugin.
+- **Install one architecture plugin, not both.** `feature-sliced-design` enforces FSD's layers and import direction; `feature-folders` is for everything else and only blocks new files, never edits. They disagree on what `src/` should look like.
 - The Figma agents (`theme-sync`, `block-builder`) need the Figma MCP server connected in the target project.
 
 ## First run

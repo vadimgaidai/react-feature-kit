@@ -41,6 +41,19 @@
       "category": "architecture",
       "keywords": ["feature-sliced-design", "fsd", "architecture"],
       "version": "0.2.0"
+    },
+    {
+      "name": "feature-folders",
+      "author": {
+        "name": "Vadym Haidai",
+        "url": "https://github.com/vadimgaidai"
+      },
+      "displayName": "Feature Folders",
+      "source": "./plugins/feature-folders",
+      "description": "Architecture-agnostic structure guardrails: global buckets (components, hooks, providers, lib, config, api) plus feature/page/layout modules, a scaffolder, and hooks that reject a new file outside them or a wrong filename — edits to existing files always pass, so a legacy project stays untouched.",
+      "category": "architecture",
+      "keywords": ["architecture", "react", "feature-folders", "structure"],
+      "version": "0.1.0"
     }
   ]
 }

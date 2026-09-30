@@ -1,6 +1,6 @@
 # Use cases
 
-Seven situations worked end to end: what you type, what appears on disk, what comes back, and where the kit stops instead of guessing. All commands come from `react-feature-workflow`; the last scenario needs `feature-sliced-design`.
+Eight situations worked end to end: what you type, what appears on disk, what comes back, and where the kit stops instead of guessing. All commands come from `react-feature-workflow`; the last two scenarios need `feature-sliced-design` and `feature-folders` respectively — never both installed together.
 
 ---
 
@@ -89,3 +89,13 @@ Requires `feature-sliced-design`. Claude, mid-task, tries to write `src/utils/fo
 The write is rejected before it reaches disk — `src/utils/` is not an FSD layer — and the rejection message names where the file belongs, so Claude moves it in the same turn instead of you catching it in review. The same hooks reject `UserCard.tsx` (files are kebab-case) and a barrel import of `@/shared/ui` (direct sub-path imports only).
 
 For a new module, the skeleton is not generated at all: `analyze` runs the plugin's `scaffold.sh`, which creates the directories, barrels and empty model files in one shell call. Generation then spends tokens only on the code that differs per feature. The script refuses to touch an existing module — a refusal means the module exists and should be extended, not recreated.
+
+## A legacy project, not a layered one
+
+Requires `feature-folders`. The project predates any plugin: three years of components under `src/components/`, some feature folders, no layers to speak of. Adding a "restart tour" setting means touching an existing `src/pages/settings/preferences.tsx` and adding one new file.
+
+The edit to `preferences.tsx` is never checked — the placement hook only looks at files that don't exist yet, so years of pre-existing structure are never fought. The new file, a provider for the tour's state, goes through the global-vs-local table: it's mounted in the dashboard layout, so it's global from the start — `src/providers/guided-tour-provider.tsx` — not stashed inside whichever feature folder happened to need it first. Had Claude instead tried `src/features/guided-tour/context.ts`, nothing would have blocked it — the hook only rejects a file outside the recognized top-level buckets, not a judgment call the skill's table already settles case by case.
+
+A second file, `src/utils/format-date.ts`, does get rejected: `utils/` isn't a recognized bucket, and the rejection points straight at `src/lib/format-date.ts` instead.
+
+**Where it stops.** Only new files are steered; nothing existing is touched, relabeled, or flagged. The skill's page/layout/feature ladder and its placement table are followed by Claude's own judgment — they're not hook-enforced — so a promotion call it gets wrong is a review question, exactly like import direction is for `feature-sliced-design`.
