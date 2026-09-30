@@ -179,10 +179,18 @@ for case_file in plugins/*/evals/*/case.yaml; do
   sandbox="$WORK/run-$case_name"
   mkdir -p "$sandbox"
   if (cd "$sandbox" && bash "$script") >"$WORK/err" 2>&1; then
-    if ls "$sandbox"/.planning/*/PLAN.md >/dev/null 2>&1; then
-      ok "$case_name: scaffold runs and writes a PLAN.md"
+    # A scaffold that creates .planning/ (react-feature-workflow's fixtures) must put a
+    # PLAN.md in it — that's the file `implement`/`review` read. A scaffold for a plugin
+    # with no planning workflow (e.g. feature-folders, testing hooks only) has no
+    # .planning/ at all, and running cleanly is the whole bar for it.
+    if [ -d "$sandbox/.planning" ]; then
+      if ls "$sandbox"/.planning/*/PLAN.md >/dev/null 2>&1; then
+        ok "$case_name: scaffold runs and writes a PLAN.md"
+      else
+        bad "$case_name: scaffold ran but wrote no .planning/*/PLAN.md"
+      fi
     else
-      bad "$case_name: scaffold ran but wrote no .planning/*/PLAN.md"
+      ok "$case_name: scaffold runs"
     fi
   else
     bad "$case_name: scaffold runs"

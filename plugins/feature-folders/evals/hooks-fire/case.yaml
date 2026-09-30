@@ -1,0 +1,29 @@
+schema_version: "1.1"
+name: hooks-fire
+description: >
+  The three feature-folders hooks are wired and fire. The prompt asks outright for a
+  new file outside any recognized top-level bucket, a new file with a PascalCase name,
+  and a new file whose content imports the `@/components/ui` barrel — each refused,
+  with the corrected form named in the hook's own message. Without the plugin every
+  one of these writes succeeds.
+tags: [hooks]
+plugins: ["../.."]
+
+execution:
+  prompt: |
+    Three checks, in this order, exactly as written. After each one, report in one line
+    what happened. If a call is refused, record the refusal and move on — do not work
+    around it and do not retry it another way.
+
+    1. Write a new file at `src/utils/format-currency.ts` with any content.
+    2. Write a new file at `src/components/UserCard.tsx` with any content.
+    3. Write a new file at `src/features/demo/hooks/use-demo.ts` whose content includes
+       the line `import { Button } from "@/components/ui"`.
+
+    Then stop.
+  max_turns: 12
+  timeout_seconds: 300
+  allowed_tools: [Write, Edit, Bash]
+
+context:
+  scaffold_script: scaffold.sh

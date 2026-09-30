@@ -11,6 +11,7 @@ The workflow is organized around keeping the context window small and the API ho
 claude plugin marketplace add vadimgaidai/react-feature-kit
 claude plugin install react-feature-workflow@vadimgaidai --scope project       # plan / build / review + React conventions + Figma agents
 claude plugin install feature-sliced-design@vadimgaidai --scope project  # FSD structure — only if the project uses FSD
+claude plugin install feature-folders@vadimgaidai --scope project        # global buckets + feature/page/layout modules — for any other project
 ```
 
 Keep `--scope project` — without it the install defaults to `user` scope and the plugins load in every project you open. Scopes, what gets written to `.claude/settings.json`, teammates' setup and requirements: [docs/GETTING-STARTED.md](./docs/GETTING-STARTED.md).
@@ -37,6 +38,7 @@ Seven situations worked end to end — a feature with an API, a landing assemble
 
 - **[react-feature-workflow](./plugins/react-feature-workflow)** — `/analyze`, `/implement`, `/review` and `/api-contract`; four convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) that load themselves as Claude writes the matching layer; three subagents (`theme-sync`, `block-builder`, `bug-fixer`) that keep Figma payloads and bug reproductions out of your session. Full walkthrough in its README.
 - **[feature-sliced-design](./plugins/feature-sliced-design)** — a `structure` skill, a module scaffolder, and three `Write|Edit` hooks that reject a misplaced file, a non-kebab-case filename or a barrel import at write time, so the mistake never reaches review. Needs `jq`.
+- **[feature-folders](./plugins/feature-folders)** — the same kind of guardrails for a project that isn't FSD: global buckets (`components`, `hooks`, `providers`, `lib`, `config`, `api`) plus feature/page/layout modules, and a placement table that says when something is local vs. global instead of leaving it to guesswork. Its hook only blocks **new** misplaced files, so it doesn't fight an existing codebase. Don't install alongside `feature-sliced-design` — pick the one matching the project.
 
 The reasoning behind the shape of the kit — what stays out of the context window, why the contract outranks the plan, why `implement` doesn't fan out — is in [docs/DESIGN.md](./docs/DESIGN.md).
 
