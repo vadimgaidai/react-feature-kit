@@ -84,3 +84,22 @@ script validates kebab-case and refuses to touch an existing module — if it
 refuses, the module exists: extend it instead. The single-file global buckets
 (`components/`, `hooks/`, `providers/`, `lib/`, `config/`, `assets/`) aren't
 scaffolded — there's no skeleton, just one file, added with Write.
+
+## Reviewing
+
+**Hook-enforced — never re-report:** top-level bucket of a new file; filename
+case; barrel import from `components/ui`; a domain type, an as-const
+constant, a zod schema, a hook, or an HTTP call defined in a UI file; a
+feature or page with its own `api/` folder.
+
+**Script-checkable (`review` runs `structure-check.sh <changed files>`):** a
+module missing its barrel; a barrel re-exporting a file that does not exist;
+a `use-*.ts` outside `hooks/`.
+
+**Judgement — the rubric:**
+- local vs global: a component or hook promoted to a global bucket while it
+  reads a feature's types or copy ([references/placement.md](references/placement.md)
+  row test) — quote the row
+- a page holding business logic or fetching directly
+- a module whose anatomy differs from the layer's skeleton without a stated
+  reason

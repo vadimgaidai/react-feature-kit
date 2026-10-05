@@ -1,6 +1,6 @@
 # Evals
 
-Six cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
+Nine cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
 are behaviour, not documentation, and that a regression would break silently.
 
 | Case | Asserts |
@@ -11,6 +11,9 @@ are behaviour, not documentation, and that a regression would break silently.
 | `hooks-block-shortcuts` | The three guard hooks are wired and fire: the prompt asks outright to `cat` the sliced spec, `Read` a 400-line type file whole and `cat` a sibling source file, and each is refused, with neither body entering the window. |
 | `format-on-write` | The Prettier hook is wired: a stub `prettier` in the fixture records the `--write` call the hook makes after Claude writes a file. |
 | `cross-cutting-feature` | Modeled on a real run, a guided tour across a dashboard app: one new folder-shaped context mirroring a five-file sibling, edits to five existing files, a plan-approved library already installed. Asserts the outline replaces reading the sibling, the existing files are edited in place, the 340-line catalogue and the 750-line `.d.ts` are not read whole or grepped a dozen times, typecheck runs, and neither the dev server nor the `run` skill is started — the two things the real session got wrong. |
+| `code-shape-conventions` | `review` catches the `code-shape` slop planted on a feature branch: a narrative comment, a third positional parameter, a nested ternary, a loop in a loop, a boolean flag parameter, a magic number. |
+| `typescript-conventions` | `review` catches the `typescript` slop planted on a feature branch: an `as` cast outside a boundary, `any`, a non-null assertion, an optional-everything interface, a non-exhaustive switch over a union. |
+| `error-handling-conventions` | `review` catches the `error-handling` slop planted on a feature branch: a catch that logs and continues, a try/catch in a component body, a duplicated `onError`, a fallback that silences a required field, a generic toast for every failure. |
 
 No `llm` graders are left: the two the review case had asked whether a named field and a
 named defect appear in the report, which a regex answers without a judge. Three judge votes

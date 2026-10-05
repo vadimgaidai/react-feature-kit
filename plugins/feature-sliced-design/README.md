@@ -1,6 +1,6 @@
 # Feature-Sliced Design
 
-A [Claude Code](https://claude.com/claude-code) plugin for projects using [Feature-Sliced Design](https://feature-sliced.design/): a skill that answers layer and import-boundary questions with reference code, a scaffold script that creates module skeletons deterministically, and three hooks that reject a misplaced file, a wrong filename or a barrel import before it is written — not in review after.
+A [Claude Code](https://claude.com/claude-code) plugin for projects using [Feature-Sliced Design](https://feature-sliced.design/): a skill that answers layer and import-boundary questions with reference code, a scaffold script that creates module skeletons deterministically, and four hooks that reject a misplaced file, a wrong filename, a barrel import, an upward/sideways import, or model content in the wrong place before it is written — not in review after.
 
 ## Install
 
@@ -21,6 +21,7 @@ Keep `--scope project`: at the default `user` scope these hooks would block writ
 | `fsd-validator` hook | Rejects a file written outside a valid FSD layer |
 | `kebab-case-validator` hook | Rejects a filename that isn't kebab-case |
 | `barrel-import-validator` hook | Rejects a barrel import of `@/shared/ui` (direct sub-path imports only) |
+| `model-placement-validator` hook | Rejects a domain type, an as-const constant, a zod schema, a hook or an HTTP call defined in a UI file; an entity calling `useMutation`; and an upward or sideways import against the layer order — checks old files and new |
 
 ## Usage
 
@@ -30,15 +31,17 @@ The hooks need nothing from you either. They run on every file Claude writes:
 
 - a component dropped outside `app/`, `pages/`, `widgets/`, `features/`, `entities/` or `shared/` is rejected with an explanation of where it belongs;
 - `UserCard.tsx` is rejected in favor of `user-card.tsx`;
-- importing `Button` via the `@/shared/ui` barrel is rejected in favor of the direct path `@/shared/ui/button`.
+- importing `Button` via the `@/shared/ui` barrel is rejected in favor of the direct path `@/shared/ui/button`;
+- a `features/comments` file importing from `@/entities/article` is fine; the reverse — an entity importing a feature, or a feature importing another feature — is rejected;
+- `export interface IComment { ... }` written into a `ui/*.tsx` file is rejected in favor of `model/types.ts`, whether that file is new or years old.
 
 The rejection message tells Claude what to do instead, so it self-corrects in the same turn. A worked example is in [Use cases](../../docs/USE-CASES.md).
 
-Import direction (an entity importing from a feature) is described by the `structure` skill but not enforced by a hook, so that class of mistake is caught in review rather than at write time.
+Import direction is hook-enforced since 0.3.0 — `model-placement-validator` checks every `Write`/`Edit` under a layer against the layers below it.
 
 ## Requirements
 
-The three hooks shell out to `jq`. Without it they exit quietly instead of blocking a bad write — so the checks look like they're running when they aren't. Install `jq` first.
+The four hooks shell out to `jq`. Without it they exit quietly instead of blocking a bad write — so the checks look like they're running when they aren't. Install `jq` first.
 
 ## Fits with
 

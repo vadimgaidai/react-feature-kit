@@ -1,0 +1,18 @@
+schema_version: "1.1"
+name: code-shape-conventions
+description: >
+  `/review` catches the `code-shape` slop planted on the feature branch: a narrative
+  comment, a third positional parameter, a nested ternary, a loop inside a loop, a boolean
+  flag parameter and a magic number.
+tags: [review, code-shape]
+plugins: ["../.."]
+
+execution:
+  prompt: |
+    Review the changes on this branch for code-shape issues.
+  max_turns: 20
+  timeout_seconds: 400
+  allowed_tools: [Read, Glob, Grep, Bash, Skill]
+
+context:
+  scaffold_script: scaffold.sh

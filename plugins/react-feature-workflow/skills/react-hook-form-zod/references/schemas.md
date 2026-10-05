@@ -11,17 +11,20 @@ All zod validation lives in `model/schemas.ts`. Do **not** inline schemas inside
 import { z } from "zod"
 
 export const [feature]Schema = z.object({
-  email: z.string().email("Invalid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email("[feature].form.emailInvalid"),
+  password: z.string().min(8, "[feature].form.passwordTooShort"),
 })
 
 export const [feature]ExtendedSchema = [feature]Schema.extend({
-  name: z.string().min(2, "Name is too short"),
+  name: z.string().min(2, "[feature].form.nameTooShort"),
 })
 
 export type T[Feature]FormValues = z.infer<typeof [feature]Schema>
 export type T[Feature]ExtendedFormValues = z.infer<typeof [feature]ExtendedSchema>
 ```
+
+A message is a translation key, never text: the field renders `t(error.message)`, so the
+schema stays locale-free and the key lives next to the other `[feature]` strings.
 
 ### Reference: env validation (`src/shared/config/env/schema.ts`)
 

@@ -1,12 +1,14 @@
 # Evals
 
-Two cases over the two claims that separate this plugin from a from-scratch
-FSD setup: the hooks fire, and they only ever fire on a **new** file.
+Two cases over the claims that separate this plugin from a from-scratch FSD setup:
+the hooks fire; the bucket and naming hooks only ever fire on a **new** file, but
+the content hook fires on old files too, because new content is new slop wherever
+it lands.
 
 | Case | Asserts |
 |---|---|
-| `hooks-fire` | The three hooks are wired: a new file outside any recognized bucket, a new PascalCase file, and a new file importing `@/components/ui` as a barrel are each refused, with the hook's own `[tag]` in the trace. |
-| `legacy-edits-pass-through` | The core claim. A pre-existing `utils/`, `helpers/` and a PascalCase component — none of them new — get real edits, and neither the placement nor the naming hook fires even once across all three. The edits are actually applied, not just attempted. |
+| `hooks-fire` | The four hooks are wired: a new file outside any recognized bucket, a new PascalCase file, a new file importing `@/components/ui` as a barrel, a new file inside a feature's own `api/` folder, and a new UI file whose content defines a domain interface, an as-const map and a zod schema are each refused, with the hook's own `[tag]` in the trace, and the refused content never lands in the file. |
+| `legacy-edits-pass-through` | The core claim for the path-based hooks. A pre-existing `utils/`, `helpers/` and a PascalCase component — none of them new — get real edits, and the placement and naming hooks never fire across all three. The content hook stays silent too, because none of the edits introduce a domain type, constant, schema, hook or HTTP call. The edits are actually applied, not just attempted. |
 
 Not covered by an eval: the `structure` skill's judgment calls (the page/layout/feature
 ladder, the global-vs-local placement table). Those are advice, not a hook — there is no

@@ -101,6 +101,9 @@ A subagent reproduces it, finds the cause and fixes it with the smallest change.
 | `tanstack-query` | Query keys, `enabled` / `select` / `useQueries`, how a mutation touches the cache |
 | `ui-conventions` | Semantic tokens instead of raw colors, extending primitives, dark-mode-safe spacing and icons |
 | `react-hook-form-zod` | Where schemas live, the `z.input === z.output` rule, the usual resolver errors |
+| `code-shape` | Least code, control flow, function and parameter shape, naming |
+| `typescript` | Narrowing at the boundary, discriminated unions, `satisfies`, no `enum`/`any` |
+| `error-handling` | Where errors live in this stack: query cache, mutation hook, form resolver |
 
 ## Theme sync
 

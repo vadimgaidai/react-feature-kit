@@ -14,7 +14,7 @@ There is a backend contract, a form, a list, and three UI states nobody has writ
    - `PLAN.md` — modules in build order, queries and what each mutation invalidates, form schema rules, loading/empty/error states per component, and 3–7 acceptance criteria.
 3. Read `PLAN.md`. It is a normal markdown file, and this is the cheapest point in the flow to change your mind — no code exists yet.
 4. In a **fresh session**: `/react-feature-workflow:implement`. It reads the plan, the contract, `CLAUDE.md` and one existing module of the same kind as a tone reference, builds every module in the plan's order, and runs your typecheck.
-5. In a third session: `/react-feature-workflow:review`. Every acceptance criterion comes back as `[x]` or `[ ]` with a `file:line` behind the verdict.
+5. In a third session: `/react-feature-workflow:review`. Every acceptance criterion comes back as `[x]` or `[ ]` with a `file:line` behind the verdict; `review` also reads the `code-shape`, `typescript` and `error-handling` skills' `## Reviewing` rubrics against the diff.
 
 **Where it stops.** `implement` takes every request and response shape from `contract.md`. When the plan and the contract disagree about a field, it follows the contract and says so; a field that is not in the contract does not go into the types. `review` reports findings — it edits code only when you ask, except an obvious mechanical fix, which it applies and names.
 
@@ -86,7 +86,7 @@ The old slice records everything needed to reproduce it — its `Source:` URL at
 
 Requires `feature-sliced-design`. Claude, mid-task, tries to write `src/utils/format.ts`.
 
-The write is rejected before it reaches disk — `src/utils/` is not an FSD layer — and the rejection message names where the file belongs, so Claude moves it in the same turn instead of you catching it in review. The same hooks reject `UserCard.tsx` (files are kebab-case) and a barrel import of `@/shared/ui` (direct sub-path imports only).
+The write is rejected before it reaches disk — `src/utils/` is not an FSD layer — and the rejection message names where the file belongs, so Claude moves it in the same turn instead of you catching it in review. The same hooks reject `UserCard.tsx` (files are kebab-case), a barrel import of `@/shared/ui` (direct sub-path imports only), an `export interface IComment` written into a `ui/*.tsx` file (domain types go in `model/types.ts`), and `src/features/comments` importing from `src/features/auth` (sideways, never allowed).
 
 For a new module, the skeleton is not generated at all: `analyze` runs the plugin's `scaffold.sh`, which creates the directories, barrels and empty model files in one shell call. Generation then spends tokens only on the code that differs per feature. The script refuses to touch an existing module — a refusal means the module exists and should be extended, not recreated.
 
@@ -98,4 +98,4 @@ The edit to `preferences.tsx` is never checked — the placement hook only looks
 
 A second file, `src/utils/format-date.ts`, does get rejected: `utils/` isn't a recognized bucket, and the rejection points straight at `src/lib/format-date.ts` instead.
 
-**Where it stops.** Only new files are steered; nothing existing is touched, relabeled, or flagged. The skill's page/layout/feature ladder and its placement table are followed by Claude's own judgment — they're not hook-enforced — so a promotion call it gets wrong is a review question, exactly like import direction is for `feature-sliced-design`.
+**Where it stops.** Only new files are steered by the placement and naming hooks; nothing existing is touched, relabeled, or flagged there. The skill's page/layout/feature ladder and its global-vs-local table are followed by Claude's own judgment — they're not hook-enforced — so a promotion call it gets wrong is a review question. `structure/SKILL.md`'s `## Reviewing` section names exactly that split (hook-enforced, script-checkable, judgement) so `review` knows which is which without reading the rest of the skill.

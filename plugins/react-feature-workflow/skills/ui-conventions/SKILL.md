@@ -45,3 +45,4 @@ The reference files use placeholders — `[name]` kebab-case, `[Name]` PascalCas
 - Copy a primitive's source to tweak one style — extend it.
 - Reach for an arbitrary Tailwind value (`w-[327px]`) when a scale step or token fits — or invent a scale class without confirming the key exists in the project's `@theme`.
 - Ship a component that only looks right in one theme.
+- Put a user-facing string in JSX, a toast, a schema message or a fallback — every visible text is a `t()` key.
