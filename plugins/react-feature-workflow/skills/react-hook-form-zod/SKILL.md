@@ -23,7 +23,7 @@ const form = useForm<TFooFormValues>({
 
 - Layout: `FieldGroup` + `Field` + `FieldLabel` + `FieldDescription` — never raw `div`s, never legacy `Form`/`FormField`/`FormItem`. Array rows (tags, photo URLs) are still `Field`s.
 - `register` for plain inputs; `Controller` for Select/Combobox/DatePicker.
-- Errors via `FieldDescription` driven by `errors.[field]?.message`. Let RHF + Zod validate — no manual `onChange` validation.
+- Errors via `FieldDescription` driven by `t(errors.[field]?.message)` — schema messages are translation keys, never text. Let RHF + Zod validate — no manual `onChange` validation.
 - Submit button: `disabled={isSubmitting || mutation.isPending}` + `Spinner` with `data-icon="inline-start"` — never just swap the label.
 - Numbers from inputs: `z.coerce.number()`.
 - Multi-step → step components sharing state via `FormProvider`.

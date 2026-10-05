@@ -62,6 +62,28 @@ bash "${CLAUDE_PLUGIN_ROOT}"/skills/structure/scripts/scaffold.sh <layer>/<name>
 
 Omit the file list for the layer's default skeleton. The script validates kebab-case and refuses to touch an existing module — if it refuses, the module exists: extend it instead.
 
+## Reviewing
+
+**Hook-enforced — never re-report:** top-level layer of a new file; filename
+case; barrel import from `shared/ui`; a domain type, an as-const constant, a
+zod schema, a hook, or an HTTP call defined in a UI file; an upward or
+sideways import; an entity calling `useMutation`.
+
+**Script-checkable (`review` runs `structure-check.sh <changed files>`):** a
+module missing its barrel; a barrel re-exporting a file that does not exist;
+a `use-*.ts` outside `hooks/`; a `.api.ts` without a sibling
+`.queries.ts`/`.mutations.ts`.
+
+**Judgement — the rubric:**
+- local vs global: a wrapper promoted to `shared/ui/` while it still carries
+  one feature's domain knowledge ([references/ui.md](references/ui.md) row
+  test) — quote the row
+- a page holding business logic or fetching directly
+- a module whose anatomy differs from the layer's skeleton without a stated
+  reason
+- an entity importing another entity through a relative path the hook cannot
+  see
+
 ## Reading the canonical code shapes
 
 Every reference file uses abstract placeholders — never a real module, so nothing breaks when a template module is deleted. Substitute your own names:

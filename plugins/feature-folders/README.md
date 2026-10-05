@@ -8,12 +8,14 @@ feature/page/layout modules, a scaffolder, and hooks that reject a new file
 outside them or a wrong filename — not in review after.
 
 Unlike [`feature-sliced-design`](../feature-sliced-design), this plugin has no
-layer hierarchy and no import-direction rule, and its placement hook only
-blocks **new** files — editing or overwriting a file that already exists
-always passes. Drop it into a project with years of existing structure and it
-steers new work without fighting the old tree. Don't install both plugins in
-the same project; pick the one that matches the project's actual
-architecture.
+layer hierarchy and no import-direction rule, and its placement and naming
+hooks only block **new** files — editing or overwriting a file that already
+exists always passes. The content hook is different: a domain type, an
+as-const constant, a schema, a hook or an HTTP call landing in a UI file is
+new slop wherever it lands, so that hook checks old files and new alike.
+Drop it into a project with years of existing structure and it steers new
+work without fighting the old tree. Don't install both plugins in the same
+project; pick the one that matches the project's actual architecture.
 
 ## Install
 
@@ -37,6 +39,7 @@ writes, and install `jq` first — see [Requirements](#requirements). Details:
 | `bucket-placement-validator` hook | Rejects a **new** file written outside a recognized top-level bucket, with a pointer to where that role actually lives. Never blocks an edit to a file that already exists |
 | `kebab-case-validator` hook | Rejects a filename that isn't kebab-case |
 | `barrel-import-validator` hook | Rejects a barrel import of `@/components/ui` (direct sub-path imports only) |
+| `model-placement-validator` hook | Rejects a domain type, an as-const constant, a zod schema, a hook or an HTTP call defined in a UI file, and a feature/page with its own `api/` folder — checks old files and new, since new content is new slop wherever it lands |
 
 ## Usage
 
@@ -56,11 +59,14 @@ The hooks need nothing from you:
   was installed is never touched by the hook — only new files are checked;
 - `UserCard.tsx` is rejected in favor of `user-card.tsx`;
 - importing `Button` via the `@/components/ui` barrel is rejected in favor of
-  the direct path `@/components/ui/button`.
+  the direct path `@/components/ui/button`;
+- a `export interface IComment { ... }` written into a `components/*.tsx` file
+  is rejected in favor of `<module>/types.ts`, whether that file is new or
+  years old.
 
 ## Requirements
 
-The three hooks shell out to `jq`. Without it they exit quietly instead of
+The four hooks shell out to `jq`. Without it they exit quietly instead of
 blocking a bad write — install `jq` first.
 
 ## Fits with

@@ -14,7 +14,7 @@ const handleSubmit = () => {
   })
 }
 
-return <Button onClick={handleSubmit} disabled={isPending}>Save</Button>
+return <Button onClick={handleSubmit} disabled={isPending}>{t("actions.save")}</Button>
 ```
 
 `isPending` stays `true` for the whole async body, so a hand-rolled `const [isLoading, setIsLoading] = useState(false)` around a submit is redundant. Errors are not caught for you — `try`/`catch` inside the transition, or let an error boundary take it.

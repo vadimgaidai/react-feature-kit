@@ -1,0 +1,57 @@
+---
+name: typescript
+description: Type discipline — narrowing at the boundary, discriminated unions over optional soup, satisfies, no enum, no any. Use when writing types, narrowing, generics or casting, or reviewing any .ts file.
+---
+
+# TypeScript
+
+## Types come from the contract and from inference
+
+A hand-written interface that mirrors `z.infer` or a contract shape is a second source of
+truth. Derive it instead.
+
+## Narrow at the boundary, once
+
+Parse unknown input (`zod`, a type guard) where it enters; downstream code trusts the type.
+`as` is a claim the compiler cannot check; a guard is one it can.
+
+## Discriminated unions over optional soup
+
+`{ status: 'error'; error } | { status: 'ok'; data }` instead of
+`{ data?: T; error?: E; isLoading?: boolean }`.
+
+## `satisfies` for shape-checking a literal without widening it
+
+## No `enum`
+
+`as const` object plus a derived union. The structure skills own which file it lives in.
+
+## `unknown` at the edge, never `any`
+
+`any` disables the compiler for everything it touches, not just the value it's assigned to.
+
+## Don't re-check what the type already guarantees
+
+No runtime `typeof` for what the type already says; no `!`; no `?? fallback` on a value the
+type says is present.
+
+## Type-only imports are `import type`
+
+Generic parameters stay `T`, `K`, `TData` — a descriptive name on a generic parameter is
+noise the call site never reads.
+
+## Reviewing
+
+In order of how often it hurts:
+
+- `as` outside a boundary
+- `any` / `!` / `@ts-ignore`
+- an optional-everything interface where a union was meant
+- a duplicated inferred type
+- a `typeof` guard on a value the type already narrows
+- a non-exhaustive `switch` on a union
+
+## Lint owns
+
+`no-explicit-any`, `no-non-null-assertion`, `ban-ts-comment`, `no-unnecessary-condition`,
+`switch-exhaustiveness-check`, `consistent-type-imports` — don't re-report any of these.

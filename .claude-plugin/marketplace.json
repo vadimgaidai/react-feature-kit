@@ -27,7 +27,7 @@
         "tanstack-query",
         "figma"
       ],
-      "version": "0.7.0"
+      "version": "0.8.0"
     },
     {
       "name": "feature-sliced-design",
@@ -37,10 +37,10 @@
       },
       "displayName": "Feature-Sliced Design",
       "source": "./plugins/feature-sliced-design",
-      "description": "Feature-Sliced Design guardrails: a skill that answers layer and import questions, a module scaffolder, and hooks that reject a misplaced file or a wrong filename before it is written — not in review after.",
+      "description": "Feature-Sliced Design guardrails: a skill that answers layer and import questions, a module scaffolder, and hooks that reject a misplaced file, a wrong filename, an upward/sideways import, or model content in the wrong place before it is written — not in review after.",
       "category": "architecture",
       "keywords": ["feature-sliced-design", "fsd", "architecture"],
-      "version": "0.2.0"
+      "version": "0.3.0"
     },
     {
       "name": "feature-folders",
@@ -50,10 +50,10 @@
       },
       "displayName": "Feature Folders",
       "source": "./plugins/feature-folders",
-      "description": "Architecture-agnostic structure guardrails: global buckets (components, hooks, providers, lib, config, api) plus feature/page/layout modules, a scaffolder, and hooks that reject a new file outside them or a wrong filename — edits to existing files always pass, so a legacy project stays untouched.",
+      "description": "Architecture-agnostic structure guardrails: global buckets (components, hooks, providers, lib, config, api) plus feature/page/layout modules, a scaffolder, and hooks that reject a new file outside them, a wrong filename, or model content (a type, a constant, a schema, a hook, an HTTP call) in the wrong place — placement and naming only ever block a new file, so a legacy project stays untouched.",
       "category": "architecture",
       "keywords": ["architecture", "react", "feature-folders", "structure"],
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }
