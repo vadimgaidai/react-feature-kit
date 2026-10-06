@@ -15,7 +15,7 @@
       },
       "displayName": "React Feature Workflow",
       "source": "./plugins/react-feature-workflow",
-      "description": "Build features from a plan, not one long chat: /analyze writes PLAN.md + an API contract, /implement builds it, /review checks the diff — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
+      "description": "Build features from a plan, not one long chat: /analyze writes PLAN.md + an API contract, /implement builds it, /review checks the diff against the convention skills, the sibling module and a slop catalogue — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
       "category": "workflow",
       "keywords": [
         "planning",
@@ -27,7 +27,7 @@
         "tanstack-query",
         "figma"
       ],
-      "version": "0.8.0"
+      "version": "0.9.0"
     },
     {
       "name": "feature-sliced-design",
@@ -40,7 +40,7 @@
       "description": "Feature-Sliced Design guardrails: a skill that answers layer and import questions, a module scaffolder, and hooks that reject a misplaced file, a wrong filename, an upward/sideways import, or model content in the wrong place before it is written — not in review after.",
       "category": "architecture",
       "keywords": ["feature-sliced-design", "fsd", "architecture"],
-      "version": "0.3.0"
+      "version": "0.3.1"
     },
     {
       "name": "feature-folders",
@@ -53,7 +53,7 @@
       "description": "Architecture-agnostic structure guardrails: global buckets (components, hooks, providers, lib, config, api) plus feature/page/layout modules, a scaffolder, and hooks that reject a new file outside them, a wrong filename, or model content (a type, a constant, a schema, a hook, an HTTP call) in the wrong place — placement and naming only ever block a new file, so a legacy project stays untouched.",
       "category": "architecture",
       "keywords": ["architecture", "react", "feature-folders", "structure"],
-      "version": "0.2.0"
+      "version": "0.2.1"
     }
   ]
 }

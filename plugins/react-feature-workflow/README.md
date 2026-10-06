@@ -2,7 +2,7 @@
 
 A plan / build / review workflow for [Claude Code](https://claude.com/claude-code), plus self-loading React conventions and Figma agents. The workflow core works in any TypeScript project; the React skills load only where they apply.
 
-`/analyze` interviews you and writes the spec to disk: `PLAN.md` plus an API contract sliced from your OpenAPI spec, so field names come from the backend rather than from Claude. `/implement` builds from those files in a fresh session; `/review` checks the diff against them in a third, so the reviewer hasn't just written the code it judges. Figma frames are read by subagents that return components and a short report — the payloads never enter your session.
+`/analyze` interviews you and writes the spec to disk: `PLAN.md` plus an API contract sliced from your OpenAPI spec, so field names come from the backend rather than from Claude. `/implement` builds from those files in a fresh session; `/review` checks the diff against the convention skills and the sibling module in a third, so the reviewer hasn't just written the code it judges. Figma frames are read by subagents that return components and a short report — the payloads never enter your session.
 
 ## Install
 
@@ -59,10 +59,10 @@ Claude asks a handful of questions, one at a time, each with a recommended answe
 
 ```
 /react-feature-workflow:implement    # builds the plan in order, runs your typecheck
-/react-feature-workflow:review       # checks the diff against the plan and the contract
+/react-feature-workflow:review       # judges the diff's decisions against the convention skills and the sibling module
 ```
 
-`implement` follows your project's conventions (it reads `CLAUDE.md` and outlines one existing module of the same kind rather than reading it), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` reports; it applies a change only when you ask, or when the fix is mechanical and unambiguous — and it names what it applied. Narrow it with `/react-feature-workflow:review contract` (or `correctness`, `consistency`, `perf`).
+`implement` follows your project's conventions (it reads `CLAUDE.md` and outlines one existing module of the same kind rather than reading it), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` judges the decisions in the diff — against the convention skill that governs each hunk, the module it should resemble, the placement rules you state, and six questions that find AI slop (was this generality, this helper, this state, this layer, this fallback, this second way of doing things necessary here) — and explains every finding in three parts: what, why not here, fix. It runs your own typecheck, lint and tests and never edits; `refine` applies. Not correctness, not security, not generic simplification — Claude Code's `/code-review`, `/security-review` and `/simplify` cover those. Narrow it with `/react-feature-workflow:review skills` (or `structure`, `sibling`, `slop`).
 
 Saw something wrong before running `review`? `/react-feature-workflow:refine move the filters above the table` applies your corrections against the same plan — and when you changed your mind rather than the implementation missing something, it updates `PLAN.md` too, so `review` still verifies the current truth. Anything that is really new scope (a new module, endpoint or dependency) it routes back to `analyze` instead of quietly absorbing it.
 
@@ -85,7 +85,7 @@ A subagent reproduces it, finds the cause and fixes it with the smallest change.
 | `/react-feature-workflow:analyze` | Classifies the request, interviews you accordingly, writes `PLAN.md` + a trimmed API contract |
 | `/react-feature-workflow:implement` | Builds everything in the plan, in order, and runs your typecheck |
 | `/react-feature-workflow:refine` | Applies your corrections to what `implement` built, keeping `PLAN.md` in sync |
-| `/react-feature-workflow:review` | Checks the diff against the plan and the contract |
+| `/react-feature-workflow:review` | Judges the diff's decisions against the convention skills, the sibling module, the structure rules and six slop questions; reports, never edits |
 | `/react-feature-workflow:api-contract` | Trims a Swagger/OpenAPI spec to the endpoints you name, standalone |
 | `@react-feature-workflow:block-builder` | Builds one presentational block from a Figma node URL |
 | `@react-feature-workflow:theme-sync` | Maps a Figma file's variables onto your shadcn tokens, light and dark |

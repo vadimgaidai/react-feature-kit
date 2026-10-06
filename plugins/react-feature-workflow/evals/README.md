@@ -1,13 +1,14 @@
 # Evals
 
-Nine cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
+Ten cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
 are behaviour, not documentation, and that a regression would break silently.
 
 | Case | Asserts |
 |---|---|
 | `contract-outranks-plan` | The raw OpenAPI spec is never read — not with `Read`, not through the shell — and a field the plan's prose asks for but the contract does not define is left out and reported. |
 | `sibling-outline` | The tone reference is outlined with `sibling-outline.sh`, not read whole — at most two targeted `Read`s in the module, none through the shell, never an unbounded read of its 400-line type file — and the new module mirrors its folder shape and key factory. |
-| `review-scoped-to-diff` | `/review` returns every acceptance criterion as `[x]`/`[ ]` with a `file:line`, catches both defects planted in the diff, and never opens the untouched sibling module file by file. |
+| `review-skill-conformance` | `review`'s `skills` angle finds five planted violations by reading each governing skill's own `## Reviewing`/`## Never` section and the project's `.claude/rules` — a redundant effect, a hand-written query key, a `dark:` override, a `space-y-*` in a flex, a schema inline in a component — never reads the comparison module whole, edits nothing, writes `REVIEW.md`. |
+| `review-deslop` | `/review` judges a module that is plausible line by line and wrong as a set of decisions — one planted instance of each of the six slop questions, a removed export, an index key. Every finding in three parts (what, why not here, fix) at a `file:line`; the comparison module outlined and read only in part; nothing edited; a verdict inside the review's scope; the report in `REVIEW.md`. |
 | `hooks-block-shortcuts` | The three guard hooks are wired and fire: the prompt asks outright to `cat` the sliced spec, `Read` a 400-line type file whole and `cat` a sibling source file, and each is refused, with neither body entering the window. |
 | `format-on-write` | The Prettier hook is wired: a stub `prettier` in the fixture records the `--write` call the hook makes after Claude writes a file. |
 | `cross-cutting-feature` | Modeled on a real run, a guided tour across a dashboard app: one new folder-shaped context mirroring a five-file sibling, edits to five existing files, a plan-approved library already installed. Asserts the outline replaces reading the sibling, the existing files are edited in place, the 340-line catalogue and the 750-line `.d.ts` are not read whole or grepped a dozen times, typecheck runs, and neither the dev server nor the `run` skill is started — the two things the real session got wrong. |
@@ -15,8 +16,8 @@ are behaviour, not documentation, and that a regression would break silently.
 | `typescript-conventions` | `review` catches the `typescript` slop planted on a feature branch: an `as` cast outside a boundary, `any`, a non-null assertion, an optional-everything interface, a non-exhaustive switch over a union. |
 | `error-handling-conventions` | `review` catches the `error-handling` slop planted on a feature branch: a catch that logs and continues, a try/catch in a component body, a duplicated `onError`, a fallback that silences a required field, a generic toast for every failure. |
 
-No `llm` graders are left: the two the review case had asked whether a named field and a
-named defect appear in the report, which a regex answers without a judge. Three judge votes
+No `llm` graders are left: the two the retired `review-scoped-to-diff` case had asked whether
+a named field and a named defect appear in the report, which a regex answers without a judge. Three judge votes
 at temperature zero are one vote, and all three once failed a report whose first finding
 was the exact sentence the criteria asked for.
 
@@ -26,6 +27,13 @@ The hard check is a `regex` grader over the trace for a string that exists only 
 forbidden file (`match: not_contains`): whatever the model tried, the body never entered the
 window. `hooks-block-shortcuts` adds the third kind — the hook's own tag in the trace — which
 is what proves a `hooks.json` typo would be caught.
+
+The `review` cases bind a finding to its evidence, not to a token: `joinName` has to appear
+near `formatName` (the existing helper the finding must name), `fullName` near "derived" or
+"determined by", the fetch-in-effect at its `file:line` near the project's query layer — a
+report that mentions `useEffect` in passing is not a finding. `tool_used` graders with
+`max: 0` prove the negatives: no `Edit`, no `Write` under `src/`, no whole-file `Read` of the
+comparison module (a ranged read with `limit`/`offset` is the sanctioned kind).
 
 The two `implement` cases name the skill in the prompt. A plain-language "build the plan"
 request fired it in 2 of 6 runs, and only after the model had read the plan
