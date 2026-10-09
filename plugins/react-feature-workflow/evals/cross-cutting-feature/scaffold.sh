@@ -434,7 +434,7 @@ node -e '
   require("fs").writeFileSync("node_modules/react-tour-lib/dist/index.d.ts", head.concat(filler).join("\n") + "\n")
 '
 
-# --- the plan, in the shape a real analyze run writes ---
+# --- the plan, in the shape a real plan run writes ---
 cat > .planning/guided-tour/PLAN.md <<'EOF'
 # PLAN: guided-tour
 

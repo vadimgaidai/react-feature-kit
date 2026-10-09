@@ -35,7 +35,7 @@ function block({ src, contract }) {
   process.stderr.write(
     `[contract-source-guard] \`${src}\` is the source of \`${contract}\` and is not opened again.\n` +
       `The slice already carries every field, required flag, enum and format for the endpoints the plan names — read the contract. ` +
-      `If it looks stale, re-slice it (/react-feature-workflow:analyze, or the contract-slice.mjs command in skills/api-contract) rather than reading the spec.\n`,
+      `If it looks stale, re-slice it (/react-feature-workflow:plan, or the contract-slice.mjs command in skills/api-contract) rather than reading the spec.\n`,
   );
   process.exit(2);
 }

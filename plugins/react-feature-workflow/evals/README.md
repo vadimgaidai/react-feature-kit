@@ -1,10 +1,13 @@
 # Evals
 
-Ten cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
+Thirteen cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
 are behaviour, not documentation, and that a regression would break silently.
 
 | Case | Asserts |
 |---|---|
+| `spec-feature` | `/spec` writes `.planning/comments/SPEC.md` and nothing else: EARS-lite `R-` rules, acceptance criteria citing them, what the request left unsaid under `## Assumptions`, no module path or library name in the file, at most two source files opened. |
+| `spec-change` | A request against a module that already exists gets the `change` shape and an `## Unchanged behaviour` section — the half of a change nobody writes down. |
+| `plan-traceability` | `/plan` turns the spec into modules with a `Serves` column and a Coverage table, names the one thing the spec needs and the contract has no source for (the author avatar), never copies the spec's rules into the plan, never opens the raw OpenAPI file, writes no code. |
 | `contract-outranks-plan` | The raw OpenAPI spec is never read — not with `Read`, not through the shell — and a field the plan's prose asks for but the contract does not define is left out and reported. |
 | `sibling-outline` | The tone reference is outlined with `sibling-outline.sh`, not read whole — at most two targeted `Read`s in the module, none through the shell, never an unbounded read of its 400-line type file — and the new module mirrors its folder shape and key factory. |
 | `review-skill-conformance` | `review`'s `skills` angle finds five planted violations by reading each governing skill's own `## Reviewing`/`## Never` section and the project's `.claude/rules` — a redundant effect, a hand-written query key, a `dark:` override, a `space-y-*` in a flex, a schema inline in a component — never reads the comparison module whole, edits nothing, writes `REVIEW.md`. |
@@ -37,6 +40,11 @@ near `formatName` (the existing helper the finding must name), `fullName` near "
 report that mentions `useEffect` in passing is not a finding. `tool_used` graders with
 `max: 0` prove the negatives: no `Edit`, no `Write` under `src/`, no whole-file `Read` of the
 comparison module (a ranged read with `limit`/`offset` is the sanctioned kind).
+
+`AskUserQuestion` has no counterpart in a headless run, so the three planning cases answer
+the interview inline in the prompt and measure the file that comes out of answers the skill
+already has. What they cannot measure is the question-ranking itself; the `plan` case keeps a
+cap of two `AskUserQuestion` calls so a pass that blocks on a pre-decided dependency fails.
 
 The two `implement` cases name the skill in the prompt. A plain-language "build the plan"
 request fired it in 2 of 6 runs, and only after the model had read the plan
@@ -81,8 +89,8 @@ so a broken fixture fails CI even where the graded runs cannot.
 
 ## Not covered
 
-`analyze` (the interview needs `AskUserQuestion`, which has no counterpart in a headless
-run), `block-builder` and `theme-sync` (both need the Figma MCP server), Prettier itself
+The question-asking itself (`AskUserQuestion` has no counterpart in a headless run, so the
+planning cases pre-answer it), `block-builder` and `theme-sync` (both need the Figma MCP server), Prettier itself
 (`format-on-write` proves the hook calls it, with a stub standing in), and
 `contract-slice.mjs` itself — the cases hand-write the `contract.md` a real run would
 slice, so they test what `implement` does with a contract rather than how it was cut.

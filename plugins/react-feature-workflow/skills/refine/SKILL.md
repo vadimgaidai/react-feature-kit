@@ -9,13 +9,14 @@ You change what `/implement` built, steered by what the user saw. Main session, 
 
 ## Inputs
 
-- `.planning/[name]/PLAN.md` — the brief being refined.
+- `.planning/[name]/SPEC.md` when it exists — authoritative for behaviour and acceptance criteria. A remark that changes what the product does changes this file first.
+- `.planning/[name]/PLAN.md` — the HOW being refined: modules, boundaries, decisions.
 - `.planning/[name]/contract.md` — authoritative for shapes. Never re-fetch, never edit — it mirrors the server. If the server changed, re-slice with `api-contract`; that is not a refinement.
 - `.planning/[name]/DESIGN.md` when it exists — authoritative for tokens, spacing, layout and measurements. Screenshots are read with `Read`; never call Figma MCP for anything it answers.
 
 - `.planning/[name]/REVIEW.md` when it exists — `review`'s CONFIRMED findings as `- [ ]` items, each in three parts (what, why not here, fix), and its PLAUSIBLE ones under `## Open questions`. The first are taken in as below, never applied blind; the second are questions to settle with the user or the code, never tasks.
 
-No `.planning/` folder for this work? Take the change as a direct brief against the project's conventions — and say the plan is missing.
+No `.planning/` folder for this work? Take the change as a direct brief against the project's conventions — and say the spec and plan are missing.
 
 ## 0 — Taking in REVIEW.md
 
@@ -34,9 +35,10 @@ Blocking items (a red check, a contract violation) first, then simple ones, then
 | Kind | Test | Action |
 |---|---|---|
 | **Missed** | The plan already says it; the implementation didn't do it | Fix the code. No plan edit. |
-| **Changed mind** | The plan says A; the user now wants B | Fix the code **and** update `PLAN.md` — the module section, UI states, acceptance criteria, whatever the change touches — so `/review` verifies today's truth, not the stale one. |
+| **Changed mind, behaviour** | The spec says A; the user now wants B on screen | Fix the code **and** update `SPEC.md` — the `R-` rule, the UI state, the permission, the affected `AC-` — plus the plan's Coverage row when the mapping moves. |
+| **Changed mind, structure** | The behaviour stands; the plan's HOW changes | Fix the code **and** update `PLAN.md` only — the module section, boundary or decision the change touches. |
 | **Design mismatch** | "doesn't match the design" | Check `DESIGN.md` first: a coding error → fix it; a recorded NO MATCH / gap → that is a pending decision, ask the user, don't guess. A presentational block wrong at the markup level → one `block-builder` call with its node URL; never a Figma fetch in this session. |
-| **New scope** | A new module, endpoint, role rule — or any dependency change | Not a refinement. Name it and route it: "run `/react-feature-workflow:analyze`". |
+| **New scope** | A new module, endpoint, role rule — or any dependency change | Not a refinement. Name it and route it: new behaviour → "run `/react-feature-workflow:spec`"; a new module for behaviour the spec already has → "run `/react-feature-workflow:plan`". |
 
 A message that mixes kinds gets split: do the refinements, list what you routed away.
 
@@ -45,7 +47,7 @@ A message that mixes kinds gets split: do the refinements, list what you routed 
 `implement`'s rules apply unchanged — conventions loading order, a structure skill wins placement (sibling shape is the fallback), no dependency the plan does not name, tokens over raw values, `.d.ts` over prose. Two additions:
 
 - The smallest change that satisfies the remark. A refinement that rewrites a working module is a rewrite, not a refinement.
-- Every `PLAN.md` edit is announced, never silent — the plan is shared state between three commands.
+- Every `SPEC.md` and `PLAN.md` edit is announced as old → new, never silent — both are shared state between the commands.
 
 ## Verify
 
@@ -53,4 +55,4 @@ The project's typecheck. Nothing heavier.
 
 ## Output
 
-Files changed; every `PLAN.md` edit as old → new; anything routed to `analyze` or `api-contract`, with the reason. Then: "Next: `/react-feature-workflow:review`" — or another pass here if more comes up.
+Files changed; every `SPEC.md` and `PLAN.md` edit as old → new; anything routed to `spec`, `plan` or `api-contract`, with the reason. Then: "Next: `/react-feature-workflow:review`" — or another pass here if more comes up.
