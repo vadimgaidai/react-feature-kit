@@ -35,8 +35,9 @@ The Compiler removes the reflex, not the responsibility.
 
 - Memoize when the work is expensive **and** the inputs are stable; churning deps are a dead
   cache. Fix the algorithm before caching its result.
-- No `find`/`filter` inside `map` — build a lookup once. No `key={index}` on a list that
-  reorders, filters or grows.
+- A `find`/`filter` over a second collection repeated per rendered item is a lookup built
+  once (`code-shape` §Collections; a loop by itself is not the problem). No `key={index}` on
+  a list that reorders, filters or grows.
 - Hoist static JSX and objects; never define a component inside another's render.
 - `useState(() => expensive())` for real work; functional `setState` when the next value
   depends on the previous.
@@ -77,7 +78,7 @@ In order of how often it hurts:
 
 - a redundant effect — any shape in [references/effects.md](references/effects.md)
 - state above the only subtree that reads it, or duplicating cached server data
-- a linear scan inside a loop
+- a scan over a second collection repeated per rendered item
 - a memo whose deps churn
 - an index key on a dynamic list
 - a context whose value churns every render

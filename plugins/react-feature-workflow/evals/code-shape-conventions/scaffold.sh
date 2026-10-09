@@ -1,6 +1,7 @@
 #!/bin/bash
 # Fixture for the `code-shape-conventions` eval case. Runs in the empty workspace before
-# the prompt (`--scaffold`).
+# the prompt (`--scaffold`). The planted loop is a repeated `find` over `tones` for every
+# `row` — repeated work, not a plain nested traversal, which `code-shape` does not forbid.
 set -eu
 
 mkdir -p src/entities/badge/ui
@@ -34,20 +35,25 @@ git commit -qm "baseline: a clean badge module"
 git checkout -qb feature/badge-size
 
 cat > src/entities/badge/ui/badge-size.ts <<'EOF'
+interface ToneWeight {
+  tone: string
+  weight: number
+}
+
+interface BadgeRow {
+  tone: string
+  count: number
+}
+
 // computes the pixel size for a badge given its density and whether it is compact
-export function badgeSize(density: number, compact: boolean, theme: string) {
+export function badgeSize(density: number, compact: boolean, rows: BadgeRow[], tones: ToneWeight[]) {
   const size = compact ? (density > 2 ? 12 : 16) : 24
   let total = 0
-  const rows = [
-    [1, 2, 3],
-    [4, 5, 6],
-  ]
   for (const row of rows) {
-    for (const cell of row) {
-      total += cell
-    }
+    const tone = tones.find((candidate) => candidate.tone === row.tone)
+    total += row.count * (tone?.weight ?? 1)
   }
-  return size + total * 42 + theme.length
+  return size + total * 42
 }
 EOF
 

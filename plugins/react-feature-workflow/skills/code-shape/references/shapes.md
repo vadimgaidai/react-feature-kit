@@ -139,7 +139,7 @@ isPending ? <Spinner /> : error ? <ErrorState /> : <[Entity]List items={data} />
 
 Three render branches are early returns, not a ternary chain.
 
-## No scan inside a loop
+## Collections by meaning
 
 ```ts
 for (const comment of comments) {
@@ -159,7 +159,38 @@ for (const comment of comments) {
 The inner scan is n×m; the lookup is built once. Equivalent when `user.id` is unique (`find`
 returns the first match, `Map` keeps the last), `users` does not change during the loop, and
 the missing case is `undefined` on both sides. With duplicate ids, dedupe first or keep
-`find`. Moving the `find` into `getAuthor(comment)` changes nothing about the algorithm.
+`find`. Writing it as `comments.map((comment) => users.find(…))` or moving the `find` into
+`getAuthor(comment)` changes nothing about the algorithm.
+
+```ts
+const activeIds = items.filter(isActive).map((item) => item.id)
+const activeCount = items.filter(isActive).length
+const hasActive = items.filter(isActive).length > 0
+```
+
+```ts
+const activeItems = items.filter(isActive)
+const activeIds = activeItems.map((item) => item.id)
+const activeCount = activeItems.length
+const hasActive = items.some(isActive)
+```
+
+The same filter ran three times; once is enough, and `some` stops at the first match where
+`filter(...).length > 0` walks the whole list. Equivalent when `isActive` has no side
+effects — a predicate that counts or logs runs a different number of times after the change.
+
+```ts
+for (const a of points) {
+  for (const b of points) {
+    if (distance(a, b) < limit) {
+      pairs.push([a, b])
+    }
+  }
+}
+```
+
+Every pair is the task; the nested traversal stays. A loop is a finding only when it repeats
+work the task does not need.
 
 ## Explicit returns
 

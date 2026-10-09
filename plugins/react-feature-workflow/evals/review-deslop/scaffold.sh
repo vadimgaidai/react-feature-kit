@@ -8,7 +8,7 @@
 #   4 empty layer           `useCommentCount` only renames `comments.length`
 #   5 unjustified defence   `?? []` and a try/catch around a typed, non-throwing map
 #   6 project mismatch      a hand-rolled fetch-in-effect beside the project's query layer
-# plus a removed export the review must notice, and a sibling it must outline, never Read.
+# plus a removed export the review must notice, and a sibling it reads only in ranges.
 set -eu
 
 mkdir -p src/shared/lib src/shared/api \
@@ -52,7 +52,7 @@ export async function get<T>(url: string): Promise<T> {
 }
 EOF
 
-# --- untouched sibling: outlined by the sibling angle, never Read ---
+# --- untouched sibling: read by the sibling angle only in the ranges a comparison needs ---
 cat > src/entities/article/model/types.ts <<'EOF'
 export interface Article {
   id: string

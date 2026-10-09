@@ -6,8 +6,8 @@ description: >
   helper that repeats `shared/lib`, state synced from props, a hook that renames `.length`,
   a try/catch around a typed map, a fetch-in-effect beside the project's query layer), a
   removed export, and an index key. Every finding carries what / why not here / fix and
-  a `file:line`; the review edits nothing, outlines the sibling instead of reading it, and
-  ends with a verdict.
+  a `file:line`; the review edits nothing, reads the sibling only in the ranges a
+  comparison needs, and ends with a verdict.
 tags: [review, slop]
 plugins: ["../.."]
 

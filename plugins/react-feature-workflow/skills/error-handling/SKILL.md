@@ -38,8 +38,8 @@ error and what a `catch` may do with it.
 
 ## Reviewing
 
-Name the consequence, not the construct. A catch, a fallback or a local `onError` is not a
-finding by itself — say which of these it causes:
+Name the consequence, not the construct. A `try/catch`, a fallback, an optional chain or a
+local `onError` is not a finding by itself — say which of these it causes:
 
 - **lost error** — log-and-continue, empty catch, `queryFn` that swallows, `?? []` where the
   error branch should be
@@ -53,8 +53,8 @@ finding by itself — say which of these it causes:
   unknown error classified as network and retried
 - **lost callback** — `...options, onError` that drops the rollback the options carried
 
-## The project's lint owns
+## Overlap with the project's lint
 
-Whatever the project's own ESLint config already errors on — typically `no-empty` (catch),
-`@typescript-eslint/no-floating-promises`, `prefer-promise-reject-errors`. `review` reports
-its output under Checks and never re-derives those lines.
+A line the project's own lint reported in this review session goes under Checks and is
+not re-derived. A rule merely present in the config is not proof it ran: without that
+diagnostic in hand, the finding stands.

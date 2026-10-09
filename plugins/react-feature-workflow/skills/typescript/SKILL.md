@@ -70,9 +70,8 @@ In order of how often it hurts:
   values is known
 - an invariant held only in a comment or a runtime check, when the type could carry it
 
-## The project's lint owns
+## Overlap with the project's lint
 
-Whatever the project's own ESLint config already errors on — typically `no-explicit-any`,
-`no-non-null-assertion`, `ban-ts-comment`, `no-unnecessary-condition`,
-`switch-exhaustiveness-check`, `consistent-type-imports`. `review` reports its output under
-Checks and never re-derives those lines.
+A line the project's own lint reported in this review session goes under Checks and is
+not re-derived. A rule merely present in the config is not proof it ran: without that
+diagnostic in hand, the finding stands.
