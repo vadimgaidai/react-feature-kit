@@ -1,6 +1,6 @@
 # Evals
 
-Thirteen cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
+Fourteen cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
 are behaviour, not documentation, and that a regression would break silently.
 
 | Case | Asserts |
@@ -8,6 +8,7 @@ are behaviour, not documentation, and that a regression would break silently.
 | `spec-feature` | `/spec` writes `.planning/comments/SPEC.md` and nothing else: EARS-lite `R-` rules, acceptance criteria citing them, what the request left unsaid under `## Assumptions`, no module path or library name in the file, at most two source files opened. |
 | `spec-change` | A request against a module that already exists gets the `change` shape and an `## Unchanged behaviour` section — the half of a change nobody writes down. |
 | `plan-traceability` | `/plan` turns the spec into modules with a `Serves` column and a Coverage table, names the one thing the spec needs and the contract has no source for (the author avatar), never copies the spec's rules into the plan, never opens the raw OpenAPI file, writes no code. |
+| `verify-criteria` | `/verify` answers all four acceptance criteria with a verdict and an evidence tier — the order criterion from the test command it ran, the disabled submit from a `file:line`, the missing 409 branch as a fail, the offline retry as unverifiable with manual steps — catches the field the types carry and the contract never lists, edits nothing, writes `VERIFY.md`. |
 | `contract-outranks-plan` | The raw OpenAPI spec is never read — not with `Read`, not through the shell — and a field the plan's prose asks for but the contract does not define is left out and reported. |
 | `sibling-outline` | The tone reference is outlined with `sibling-outline.sh`, not read whole — at most two targeted `Read`s in the module, none through the shell, never an unbounded read of its 400-line type file — and the new module mirrors its folder shape and key factory. |
 | `review-skill-conformance` | `review`'s `skills` angle finds five planted violations by reading each governing skill's own `## Reviewing`/`## Never` section and the project's `.claude/rules` — a redundant effect, a hand-written query key, a `dark:` override, a `space-y-*` in a flex, a schema inline in a component — never reads the comparison module whole, edits nothing, writes `REVIEW.md`. |

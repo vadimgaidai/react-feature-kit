@@ -24,7 +24,7 @@ Keep `--scope project` — without it the install defaults to `user` scope and t
 |---|---|
 | one block from a Figma frame as a component | `@react-feature-workflow:block-builder <node-url> into <path>` — no planning needed |
 | a landing / marketing page from a Figma file | `@react-feature-workflow:theme-sync` once, then `/react-feature-workflow:spec` and `/react-feature-workflow:plan` |
-| a feature with an API, forms or state | `/react-feature-workflow:spec`, then `/react-feature-workflow:plan`, then `/react-feature-workflow:implement`, then `/react-feature-workflow:review`, each in a fresh session |
+| a feature with an API, forms or state | `/react-feature-workflow:spec`, then `/react-feature-workflow:plan`, then `/react-feature-workflow:implement`, then `/react-feature-workflow:verify` and `/react-feature-workflow:review`, each in a fresh session |
 | a change to a module that already exists | `/react-feature-workflow:spec change: …` — a delta spec with what must keep working, then `plan` |
 | changes to what was just built, before review | `/react-feature-workflow:refine <what to change>` — fixes against the same plan, updates `PLAN.md` when you changed your mind |
 | the app theme to match a design | `@react-feature-workflow:theme-sync <figma-url>` |
@@ -37,7 +37,7 @@ Seven situations worked end to end — a feature with an API, a landing assemble
 
 ## The plugins
 
-- **[react-feature-workflow](./plugins/react-feature-workflow)** — `/spec`, `/plan`, `/implement`, `/refine`, `/review` and `/api-contract`; four convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) that load themselves as Claude writes the matching layer; three subagents (`theme-sync`, `block-builder`, `bug-fixer`) that keep Figma payloads and bug reproductions out of your session. Full walkthrough in its README.
+- **[react-feature-workflow](./plugins/react-feature-workflow)** — `/spec`, `/plan`, `/implement`, `/refine`, `/verify`, `/review` and `/api-contract`; four convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) that load themselves as Claude writes the matching layer; three subagents (`theme-sync`, `block-builder`, `bug-fixer`) that keep Figma payloads and bug reproductions out of your session. Full walkthrough in its README.
 - **[feature-sliced-design](./plugins/feature-sliced-design)** — a `structure` skill, a module scaffolder, and three `Write|Edit` hooks that reject a misplaced file, a non-kebab-case filename or a barrel import at write time, so the mistake never reaches review. Needs `jq`.
 - **[feature-folders](./plugins/feature-folders)** — the same kind of guardrails for a project that isn't FSD: global buckets (`components`, `hooks`, `providers`, `lib`, `config`, `api`) plus feature/page/layout modules, and a placement table that says when something is local vs. global instead of leaving it to guesswork. Its hook only blocks **new** misplaced files, so it doesn't fight an existing codebase. Don't install alongside `feature-sliced-design` — pick the one matching the project.
 

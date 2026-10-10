@@ -63,8 +63,8 @@ If the contract disagrees with the plan's prose, **the contract wins** — say s
 
 ## Verify
 
-Run the project's typecheck. That is the whole verification. Do not run a full build or lint unless the project has no other check — pre-commit hooks and CI own those. Do not start the dev server, open a browser, or invoke the `run` skill: what the feature does in a browser is the user's to check, and anything a static read cannot establish is reported as such rather than claimed. When the typecheck passes, write the report and stop.
+Run the project's typecheck. That is the whole verification. Do not run a full build or lint unless the project has no other check — pre-commit hooks and CI own those. Do not start the dev server, open a browser, or invoke the `run` skill: what the feature does in a browser is `/react-feature-workflow:verify`'s `manual` tier — it gives the user the steps — and anything a static read cannot establish is reported as such rather than claimed. When the typecheck passes, write the report and stop.
 
 ## Output
 
-Files created/edited, anything newly required (a package to install, a UI primitive to add), and anything in the plan you did **not** build, with the reason. Then: "Next: `/react-feature-workflow:review`" — or `/react-feature-workflow:refine` first, when what you see needs changing.
+Files created/edited, anything newly required (a package to install, a UI primitive to add), and anything in the plan you did **not** build, with the reason. Then: "Next: `/react-feature-workflow:verify`" — or `/react-feature-workflow:refine` first, when what you see needs changing.
