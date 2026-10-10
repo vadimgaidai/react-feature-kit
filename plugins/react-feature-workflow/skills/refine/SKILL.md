@@ -13,9 +13,23 @@ You change what `/implement` built, steered by what the user saw. Main session, 
 - `.planning/[name]/contract.md` — authoritative for shapes. Never re-fetch, never edit — it mirrors the server. If the server changed, re-slice with `api-contract`; that is not a refinement.
 - `.planning/[name]/DESIGN.md` when it exists — authoritative for tokens, spacing, layout and measurements. Screenshots are read with `Read`; never call Figma MCP for anything it answers.
 
+- `.planning/[name]/REVIEW.md` when it exists — `review`'s CONFIRMED findings as `- [ ]` items, each in three parts (what, why not here, fix), and its PLAUSIBLE ones under `## Open questions`. The first are taken in as below, never applied blind; the second are questions to settle with the user or the code, never tasks.
+
 No `.planning/` folder for this work? Take the change as a direct brief against the project's conventions — and say the plan is missing.
 
-## 1 — Classify each remark
+## 0 — Taking in REVIEW.md
+
+A review item is a claim about the code, not an instruction. For each open box, in order:
+
+1. **Read the whole item** before touching anything — the three parts are one argument.
+2. **Verify it against the code as it is now.** Open the `file:line`; confirm the complication is there and the "why not here" still holds (the helper it names exists, the second caller it says is missing is missing, the contract line it cites says that). An item the code refutes is marked `[x] refuted — <the line that proves it>` and left alone.
+3. **Apply the fix**, one item at a time, the smallest change that keeps the behaviour; run the typecheck after each. Tick the box with one line naming what changed.
+4. **Push back with evidence, not comfort.** An item that would break behaviour, remove a designed state or contradict `PLAN.md` / `contract.md` is not applied: mark it `[x] declined — <reason, with the file:line or plan line>`. No "good catch", no "you're right" — the diff is the acknowledgement.
+5. **Unclear item → stop and ask** before applying any of the others; items can depend on each other, and half an understanding is a wrong edit.
+
+Blocking items (a red check, a contract violation) first, then simple ones, then the ones that restructure. An open question is answered — by a line of code you can quote, or by asking — and recorded under it; it is never turned into an edit on its own. Set the frontmatter `status` to `done` when every box is ticked, `partial` when any is left open with a reason.
+
+## 1 — Classify each remark (the user's)
 
 | Kind | Test | Action |
 |---|---|---|

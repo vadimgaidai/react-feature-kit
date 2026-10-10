@@ -1,59 +1,195 @@
 ---
 name: review
-description: Reviews the current diff against the plan's acceptance criteria, the API contract and the project's conventions. Takes an optional focus argument (`correctness`, `contract`, `consistency`, `perf`, comma-separated) to narrow the report. Reports findings; applies fixes only when asked. Use before opening a PR or merging, or when the user asks to review changes.
+description: Checks a change against the project's and this kit's code rules, for unnecessary complexity and for inefficient data handling — reading only the context each question needs, and proving every finding before reporting it. Reports only; fixes are a separate request through `refine`. Takes an optional angle argument (`skills`, `structure`, `sibling`, `slop`) and a git range or paths. Use before opening a PR, or when the user asks to review changes.
 ---
 
 # Review
 
-Scope is **the diff**, not the modules it touches. Do not read whole files where a hunk answers the question.
+You check **the change under review**: does it follow our rules, is it more complex than
+the task needs, does it handle data inefficiently. You read what a question needs and no
+more, and you prove each claim. The project's typecheck, lint and tests stay the project's
+checks. Not this skill's job: correctness bugs (`/code-review`), security
+(`/security-review`), generic simplification (`/simplify`) — the report says so, and the
+verdict never speaks for them.
 
-## 0 — Focus
+## 1 — Define the scope
 
-An argument, when given, names the passes to run — `correctness`, `contract`, `consistency`, `perf` — separated by commas or spaces (`/react-feature-workflow:review contract,perf`). Anything unrecognized, or no argument at all, runs all four.
+Say what is under review before reading a line, in this order of precedence:
 
-A focused run is a **shorter report over the same hunks**, never a wider read. Scope stays the diff, section 1 still runs, and the passes you skipped go unmentioned rather than being reported as clean.
-
-`security` is deliberately not a pass here: Claude Code ships `/security-review` over the same diff, and a half-version of it inside a conventions review would be worse than either.
-
-## 1 — Scope
+1. **The user named a range or files** — that, exactly.
+2. **A branch** — everything since `git merge-base HEAD <base>`, with `<base>` the one the
+   user named, else `origin/HEAD`, else `main`.
+3. **The current working state** — the branch's commits plus staged, unstaged and
+   untracked work.
 
 ```bash
-git status --short
-git diff $(git merge-base HEAD "$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|origin/||' || echo main)")..HEAD
+git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD main
+git diff --stat "$base"; git diff --name-status "$base"   # branch + working tree vs base
+git ls-files --others --exclude-standard                  # untracked files, part of the change
+git diff --stat A..B; git diff --name-status A..B         # a commit range the user named
 ```
 
-Include unstaged and untracked files. If a `.planning/*/PLAN.md` covers this work, read it and its `contract.md`; otherwise review against the project's conventions alone.
+For a commit range, the code reviewed is the range's: `git diff A..B -- <file>` and
+`git show B:<file>` for context, never the working tree's newer copy of the same file.
+Plain git computes the scope; there is no wrapper for it. The report's header states the
+scope used.
 
-## 2 — Passes
+Added and removed lines are both the change. A finding is about a problem the change
+introduced or made worse — a dropped guard and a deleted export get a verdict like an added
+line. A defect that was already there in neighbouring code is not a finding.
 
-**Correctness** — does it do what the plan says? Every acceptance criterion gets a verdict backed by `file:line`, not a summary.
+Argument: `review [angles] [range|paths]`. Angles are `skills`, `structure`, `sibling`,
+`slop`; none means all four. A focused run is a shorter report, never a narrower scope.
 
-**Contract** — every type and payload against `.planning/*/contract.md`: required vs optional, enums, nullability. A field that is not in the contract is a bug, not a nicety.
+## 2 — Find the rules that apply
 
-**Consistency** — each changed file against the sibling module it should resemble, and against any structure skill that governs it. Outline the sibling rather than reading it — `bash "${CLAUDE_PLUGIN_ROOT}"/skills/implement/scripts/sibling-outline.sh <module-dir>` — scope here is still the diff. Name what you compared against.
+Only rules the project or this kit **states**; never an architecture inferred from folder
+names, and never a plugin's presence as the precondition for a rule written down.
 
-**Performance** — render and data-layer cost, on the evidence in the diff. Not a profiling exercise: only the shapes below.
+- `CLAUDE.md`, and every `.claude/rules/*.md` whose frontmatter `paths:` matches a changed
+  file (or that has no `paths:`).
+- A structure skill loaded in this session (`feature-sliced-design`, `feature-folders`, the
+  project's own): its `## Reviewing` section, and a check script it names
+  (`structure-check.sh <changed files>`), whose lines go under **Checks**. No stated
+  structure rules → the `structure` angle says so and makes no placement finding.
+- The convention skill a hunk's content puts it under: an effect, state, memo, context or
+  JSX → `react` (and `ui-conventions` for `className`); a query key, `useQuery`, mutation or
+  invalidation → `tanstack-query`; a schema or form → `react-hook-form-zod`; `try`/`catch`,
+  `onError`, a toast, `??`/`?.` on data → `error-handling`; a type, cast, narrowing or
+  `switch` on a union → `typescript`; branching, a helper, a loop over a collection →
+  `code-shape`. Read that skill's `## Reviewing` section; open a reference file only for the
+  one shape a finding needs to cite.
+- The project's checks, as `package.json` defines them: typecheck, lint, tests. Run them
+  without installing anything; record pass / fail and the output tail under **Checks**.
+  A failing check is a finding and sets the verdict; it does not stop the review.
 
-**Defects worth the reader's time**, tagged with the pass that owns each one — a focused run reports only its own tags:
-- `correctness` — effects doing derived state, an event side effect, or a fetch
-- `perf` — a linear scan inside a loop; nested loops in render; memoization whose dependencies change every render (dead cache)
-- `correctness` — an index key on a list that can reorder, filter or grow
-- `correctness` — a query key hand-written at a call site instead of built by the entity's key factory, or a `queryFn` passed as a bare reference (which silently disables `exhaustive-deps`). Do **not** re-audit key completeness — that rule already errors on it.
-- `correctness` — a mutation that invalidates nothing, or sweeps the whole entity for a single-item edit
-- `contract` — a mutation writing a client-assembled object into the cache instead of the server's response
-- `consistency` — a local `onError` re-handling what the shared query/mutation cache already handles, or a QueryClient default restated per query
-- `correctness` — state that could be computed; an optional-chain silencing a crash instead of fixing it
-- `correctness` — UI states the plan requires but that aren't implemented
-- `contract` — guessed values where a contract, token or constant exists; `any`
+A hook or lint rule being configured is not proof it ran. Drop a candidate as a duplicate
+only with an actual diagnostic of the same problem in hand — a line of this session's lint
+output, a hook refusal in the trace — and cite it.
 
-**Skip entirely** — whatever lint and formatting already guarantee. Where `@tanstack/eslint-plugin-query` is enabled that includes query-key completeness, so never report "this variable is missing from the key": the rule already errored on it, or the `queryFn` is a bare reference, which is the finding worth reporting instead. Re-checking a machine check is wasted output.
+## 3 — Read file by file, ask everything of each
 
-## 3 — Verify
+Start from the `--stat` and `--name-status` output. Then take one changed file, or a small
+group that belongs together (a module's types, queries and component), and:
 
-Run the project's typecheck. Nothing heavier.
+1. Read its diff with small context (`git diff -U3 "$base" -- <file>`; an untracked file is
+   read whole if short, in ranges if not).
+2. Ask every question below of what you just read — all four angles — before the next file.
+   The diff is read once; it is never re-read per angle.
+3. Expand only for a specific question: the condition above a hunk, the type of a value, the
+   implementation of a helper the hunk calls, a caller of a new export. Find the symbol with
+   `rg -n` and open the found range with a `limit`/`offset` read. Say in the finding what you
+   opened and why.
 
-## 4 — Report
+Never load a whole large file, a neighbouring module, the entire PLAN or SPEC, or every
+reference file as a matter of course. A large file changed throughout is read in parts; a
+part you did not check is named in the report with the reason, never trimmed silently. The
+number of reads is not the measure — purpose is.
 
-Findings ordered by severity, each as `file:line` — the claim — why it matters. No emoji, no praise, no restating what the code does. Acceptance criteria as a `[x]`/`[ ]` list — on a focused run that omits `correctness`, skip the list rather than guessing at it. If nothing is wrong, say so in one line, naming which passes ran.
+**The comparison module** (the one `.planning/<name>/PLAN.md` names, or the obvious
+neighbour — same layer, same role) is opened only when a specific decision benefits from the
+comparison: how the sibling fetches, shapes an error, exports, names the same role. Read
+the part that answers that — a ranged read of the original is fine;
+`bash "${CLAUDE_PLUGIN_ROOT}"/skills/implement/scripts/sibling-outline.sh <path>` is a
+convenience when you need the shape of the whole module, not a required step. Say which
+module and why; none fits → the `sibling` angle says so.
 
-Apply fixes only when the user asks, or when a finding is mechanical and unambiguous — and say which you applied.
+## 4 — The questions
+
+**`skills` — is this hunk an instance of a sentence in its governing skill's `## Reviewing`?**
+A candidate quotes the sentence and the line. No sentence applies → no finding; there is no
+spirit of the skill. The applicable `CLAUDE.md` / rules files are read the same way.
+
+**`structure` — is this where the stated rules put it?** Only against rules found in
+step 2: is this local thing promoted while only one module reads it, is this page holding
+logic, does this import go against the declared direction. Quote the row or sentence.
+
+**`sibling` — does this solve the same problem differently from the module it should
+resemble?** A candidate is a structural mismatch you cannot account for — data layer,
+error shape, exports, naming of the same roles — with the sibling's line beside the hunk's.
+
+**`slop` — was this decision necessary?** Each names a cost; the candidate says what the
+cost is *here* and what you checked to know.
+
+1. **Unneeded generality** — an option, factory, generic or configuration nobody varies.
+   Check the callers before saying "nobody".
+2. **Repeat of an existing solution** — grep for the verb or the noun; name what you found,
+   or that you found nothing.
+3. **Redundant state** — a stored value that data already in scope determines; name the data.
+4. **Empty layer** — a function or hook that renames, forwards or wraps one expression and
+   owns no state and no boundary. Say what it fails to name or own.
+5. **Unjustified defence** — a `try`/`catch`, fallback, `??` or default branch for a state
+   that cannot occur. A TypeScript type is not a runtime guarantee for external data: find
+   where the value is validated or produced and name it; no guarantee found → at most an
+   open question.
+6. **Project mismatch** — a second way to organise a query, a form, a component for an
+   ordinary task. Look for the reason (a plan line, a difference in the data); only a found
+   absence confirms.
+7. **Repeated work over collections** — a search over one collection repeated for each
+   element of another, a value recomputed per iteration, an intermediate array nobody
+   reads. Name the repetition (`code-shape` §Collections). A loop is not a finding; a
+   nested traversal that the task needs is not a finding; `map` with `find` inside or an
+   inner loop moved into a helper does not remove the repetition.
+
+Two kinds of finding, kept apart in the report:
+
+- **Style violation** — a nested ternary, a comment that is not `TODO:` / `!` / a
+  directive, a third positional parameter in our own function, a one-line `return`, a
+  braceless `if`. The rule and the line are enough.
+- **Engineering remark** — an unneeded helper, a redundant state, a repeated scan, a wrong
+  owner for an error. It carries the argument: what the construct fails to name, own or
+  simplify; the data that already determines the value; the work repeated per element.
+
+Never a finding by itself: a single caller, an intermediate variable, a long file, a
+`try/catch`, an optional chain, a fallback. Each needs the argument above or it is not
+reported.
+
+## 5 — Check before you report
+
+Each candidate passes five questions or it is dropped, or moved to open questions with
+what would settle it:
+
+1. Is it about the change — introduced or made worse by these lines?
+2. Does the quoted rule apply to this line as written?
+3. Is there a concrete complexity, repeated work or style violation, not a pattern match?
+4. Is there context that justifies it — a plan line, a validation site, an external
+   signature you cannot change, a mandatory callback shape?
+5. Does the proposed change keep behaviour — same values for the same inputs, same order,
+   same handling of duplicates and missing values, same side effects?
+
+"Found a `useEffect` — slop" fails 3. "`fullName` is fully determined by `firstName` and
+`lastName` (`CommentPanel` props, both required); storing it adds a sync and a second
+render; derive it during render — the rendered text stays identical" passes all five.
+
+Layout:
+
+- **Header** — the scope as defined in step 1, `+added / −removed`, files not fully
+  checked and why.
+- **Checks** — each project check with pass / fail and its output tail as run in this
+  session; a claim with no command output behind it is not made. The structure check's
+  lines, when one ran. What was not run, and why.
+- **Findings** — `file:line` → problem → rule or concrete consequence → proposed change.
+  Style violations first, then engineering remarks, grouped by angle. Every confirmed
+  finding is listed; none is cut for a cap, and none is added for count.
+- **Open questions** — candidates with a real mechanism and an unverified fact, each with
+  what would settle it. Apart from findings, never mixed in.
+- **Verdict** — one line, for this review's scope only: *no findings against the checked
+  rules* / *findings to take to `refine`* / *a project check is red*. Never "ready to
+  merge": correctness and security were not reviewed here.
+- **Not this skill's job** — one line: `/code-review`, `/security-review`, `/simplify`.
+
+Write the same report to `.planning/<name>/REVIEW.md` when a `.planning/<name>/` folder
+exists for this work. Frontmatter `status:` is `ready` only when every project check was
+run and passed; `checks-failed` when one is red; `checks-skipped` when one could not run,
+with the reason. Findings are `- [ ]` items with their four parts and a fenced `code`
+block where the fix is exact enough to paste; open questions sit under `## Open questions`
+as plain bullets — `refine` treats the first as work and the second as questions to
+settle, never as tasks.
+
+## 6 — Fixing is a separate request
+
+`review` edits nothing — not even an obvious one-liner; a reviewer that edits is a second
+implementer. When the user asks for the fixes, that is `/react-feature-workflow:refine`:
+it reads `REVIEW.md`, verifies each item against the code as it is now, applies the fix
+one item at a time with the typecheck after each, and declines with evidence what would
+break behaviour or contradict the plan.

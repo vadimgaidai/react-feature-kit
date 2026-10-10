@@ -85,7 +85,9 @@ Queries are declared as `queryOptions({ ... })` objects in the entity, and consu
 - `isFetching` — a request is in flight, including a background refetch over data you already show. Use it for a subtle indicator, never for the main skeleton.
 - `data` is `undefined` while pending — type-narrow on the state, don't `data!` or `data?.x ?? fallback` your way past it.
 - Loading, empty and error are three different renders. A list that returns `null` on an empty array is a bug; empty needs its own copy.
+- `isLoadingError` — the first load failed and there is nothing to show. `isRefetchError` — a background refetch failed and `data` still holds the last good value; render it with an inline alert, never blank it. After an `isLoadingError` return, `data` is typed as present.
 - Use `throwOnError` plus an error boundary for "this screen cannot render without it"; handle `isError` inline for a region the page survives without.
+- In suspense mode the default is `throwOnError: (error, query) => query.state.data === undefined` — a refetch failure over cached data does not reach the boundary, the component keeps rendering and the error sits in `error`. A boundary retry needs `QueryErrorResetBoundary` with `onReset={reset}`, or it re-renders the same cached error; the shape is in the `react` skill, references/code-splitting.md.
 
 ## Mutations
 
@@ -93,7 +95,8 @@ Queries are declared as `queryOptions({ ... })` objects in the entity, and consu
 - **Invalidate in `onSuccess`, as narrowly as the change allows.** Editing one item invalidates that item's key plus the lists that contain it; it does not sweep the entity. Sweep with `keys.all()` on create and delete, where you can't know which lists changed.
 - `setQueryData` instead of an invalidation **only when the server returned the full updated object**. Writing a partial or client-guessed shape into the cache is how a screen starts showing a field the API never sent.
 - **Optimistic updates are for cheap, reversible, high-frequency actions** — a toggle, a reorder, a like. Not for a create with server-generated fields, and not for anything the user must trust as committed. The full `onMutate`/`onError`/`onSettled` shape, including cancelling in-flight refetches and the rollback context, is in [references/mutation-recipes.md](references/mutation-recipes.md).
-- Cache work, navigation, toasts and storage writes go in `onSuccess`/`onError` on the hook — not in the component's submit handler, and never in an effect watching `isSuccess`.
+- Cache work, navigation, toasts and storage writes go in `onSuccess`/`onError` on the hook — not in the component's submit handler, and never in an effect watching `isSuccess`. A follow-up specific to one call site goes in `mutate`'s per-call callbacks; `mutateAsync` only where a later step awaits the result (references/mutation-recipes.md).
+- Spreading shared options and adding a callback replaces, not extends: `...options, onError` must call `options.onError?.(...args)` first, or the rollback the options carried is gone.
 - Disable the submit control on `isPending`. Don't swap the label for the word "Loading".
 
 ## Prefetching

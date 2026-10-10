@@ -36,6 +36,7 @@ writes, and install `jq` first — see [Requirements](#requirements). Details:
 |---|---|
 | `structure` skill | Global buckets, the page/layout/feature ladder, the global-vs-local placement table, and reference code for each kind of module (feature, page, layout, api, provider, component, barrel) |
 | `scaffold.sh` | Creates a feature/page/layout/api module skeleton in one shell call. Checks kebab-case, refuses to touch an existing module |
+| `structure-check.sh` | The script-checkable half of `structure/SKILL.md`'s `## Reviewing` section: a module missing its barrel, a barrel re-exporting a file that does not exist, a `use-*.ts` outside `hooks/` — run by `react-feature-workflow`'s `review` over changed files, not a hook |
 | `bucket-placement-validator` hook | Rejects a **new** file written outside a recognized top-level bucket, with a pointer to where that role actually lives. Never blocks an edit to a file that already exists |
 | `kebab-case-validator` hook | Rejects a filename that isn't kebab-case |
 | `barrel-import-validator` hook | Rejects a barrel import of `@/components/ui` (direct sub-path imports only) |

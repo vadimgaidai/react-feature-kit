@@ -1,7 +1,9 @@
 # Code shapes
 
 > One pair per rule: the shape that gets reported, then the shape that replaces it. Placeholders
-> (`[entity]`, `[Entity]`, `I[Entity]`) stand for real names.
+> (`[entity]`, `[Entity]`, `I[Entity]`) stand for real names. Every replacement returns the same
+> values as the original for the same inputs; where that needs a condition, the condition is
+> stated next to the pair.
 
 ## The least code
 
@@ -12,8 +14,13 @@ const result = items.filter(isActive)
 return result
 ```
 
-A forwarding wrapper, a renaming re-export and a once-used variable. Call `[entity]Api.getById`
-directly, import `formatDate` under its own name, return the expression.
+The wrapper only forwards, the re-export only renames, the variable only repeats the expression
+returned on the next line. Call `[entity]Api.getById` directly, import `formatDate` under its
+own name, return the expression.
+
+What stays: `[entity]Api` itself (the boundary around `http`), a variable whose name says what
+the expression means at this spot (`const isOwner = user.id === [entity].authorId` used once
+is fine), a re-export that forms a module's public surface.
 
 ```ts
 switch (status) {
@@ -26,14 +33,23 @@ switch (status) {
 }
 ```
 
-`status` is a two-member union; the `default` is a branch for a state the type rules out. Make
-the switch exhaustive (`typescript` skill) and delete it.
+`status` is a two-member union, so the `default` goes — but only when the value is guaranteed
+to be in the union: produced in this codebase, or parsed at the boundary (`zod` schema,
+exhaustive check in the mapper). A type annotation on a value read from the API, the URL or
+storage is a promise, not a guarantee; there the `default` is the guard and stays. Same for
+`?? fallback` on a field — remove it with the schema that makes it unreachable, not with the
+type alone. Make the switch exhaustive (`typescript` skill) and delete the branch.
 
 ## Comments
 
 ```ts
 // Calculate the badge size based on the count
 const badgeSize = count > 99 ? "lg" : "sm"
+
+// Handle errors
+if (error) {
+  return <ErrorState />
+}
 
 // TODO: drop the cap once the API paginates
 const visible = items.slice(0, 50)
@@ -42,8 +58,9 @@ const visible = items.slice(0, 50)
 const timeout = setTimeout(close, 0)
 ```
 
-The first says what the line says. The second names deferred work. The third names a
-constraint a reader would otherwise "clean up". Only the last two survive.
+The first says what the line says. The second is a section header for a block that already
+reads. The third names deferred work. The fourth names a constraint a reader would otherwise
+"clean up". Only the last two survive.
 
 ## Two parameters
 
@@ -91,6 +108,9 @@ const canEdit = (user: IUser | null, [entity]: I[Entity]) => {
 }
 ```
 
+Inverting flattens the depth without a new function. Extract instead when the innermost block
+is an operation with its own name — then the function is kept for the name, not for the depth.
+
 ## Ternaries
 
 ```tsx
@@ -104,18 +124,14 @@ const labelKey = isOwner
 ```
 
 ```tsx
-const ACTION_KEY_BY_ROLE: Record<[Entity]Role, string> = {
-  owner: "[entity].actions.edit",
-  admin: "[entity].actions.moderate",
-  viewer: "[entity].actions.view",
-}
-
-const isLockedForOwner = isLocked && role === "owner"
-const labelKey = isLockedForOwner ? "[entity].actions.locked" : ACTION_KEY_BY_ROLE[role]
+const ownerKey = isLocked ? "[entity].actions.locked" : "[entity].actions.edit"
+const otherKey = isAdmin ? "[entity].actions.moderate" : "[entity].actions.view"
+const labelKey = isOwner ? ownerKey : otherKey
 ```
 
-A ternary picks between two values. Anything that reads as a decision tree is a lookup, a named
-boolean or a sub-component.
+Same inputs, same priority: `isOwner` wins, `isLocked` only matters for the owner, `isAdmin`
+only for non-owners. Each ternary now picks between two values, and the two named values are
+single-use variables that earn their line.
 
 ```tsx
 isPending ? <Spinner /> : error ? <ErrorState /> : <[Entity]List items={data} />
@@ -123,7 +139,7 @@ isPending ? <Spinner /> : error ? <ErrorState /> : <[Entity]List items={data} />
 
 Three render branches are early returns, not a ternary chain.
 
-## One loop per body
+## Collections by meaning
 
 ```ts
 for (const comment of comments) {
@@ -140,8 +156,41 @@ for (const comment of comments) {
 }
 ```
 
-The inner scan is n×m. Build the lookup once; if the inner loop is real work, it is a helper
-with a name.
+The inner scan is n×m; the lookup is built once. Equivalent when `user.id` is unique (`find`
+returns the first match, `Map` keeps the last), `users` does not change during the loop, and
+the missing case is `undefined` on both sides. With duplicate ids, dedupe first or keep
+`find`. Writing it as `comments.map((comment) => users.find(…))` or moving the `find` into
+`getAuthor(comment)` changes nothing about the algorithm.
+
+```ts
+const activeIds = items.filter(isActive).map((item) => item.id)
+const activeCount = items.filter(isActive).length
+const hasActive = items.filter(isActive).length > 0
+```
+
+```ts
+const activeItems = items.filter(isActive)
+const activeIds = activeItems.map((item) => item.id)
+const activeCount = activeItems.length
+const hasActive = items.some(isActive)
+```
+
+The same filter ran three times; once is enough, and `some` stops at the first match where
+`filter(...).length > 0` walks the whole list. Equivalent when `isActive` has no side
+effects — a predicate that counts or logs runs a different number of times after the change.
+
+```ts
+for (const a of points) {
+  for (const b of points) {
+    if (distance(a, b) < limit) {
+      pairs.push([a, b])
+    }
+  }
+}
+```
+
+Every pair is the task; the nested traversal stays. A loop is a finding only when it repeats
+work the task does not need.
 
 ## Explicit returns
 
@@ -161,15 +210,25 @@ const parsePage = (raw: string | null) => {
 }
 ```
 
-Three return shapes: `undefined`, `1`, `number`. Decide what the function returns when the
-input is bad and return that in every branch:
+The body branches, one branch returns bare, and the type `number | undefined` is inferred
+rather than stated. Write the value in every branch and the type on the signature; the
+contract does not move:
 
 ```ts
-const parsePage = (raw: string | null): number => {
+const parsePage = (raw: string | null): number | undefined => {
+  if (raw === null) {
+    return undefined
+  }
+
   const page = Number(raw)
-  return Number.isNaN(page) || page < 1 ? 1 : page
+
+  return Number.isNaN(page) ? 1 : page
 }
 ```
+
+`null` → `undefined`, `"abc"` → `1`, `""` → `0`, `"0"` → `0`, `"-3"` → `-3`, exactly as before.
+Changing what the function returns for `""` or a negative page is a contract change and its
+own finding, not a shape fix.
 
 ## Boolean parameters
 
@@ -204,15 +263,30 @@ const formatShortDate = …
 A name carries the domain word; the type is already in the type. `Manager`, `Helper`, `Utils`
 and `Service` are the absence of a name. A `2` means the author did not grep.
 
-## Extract on a second caller
+## Extract for a name, not for size
 
 ```ts
 const buildQueryKey = (filters: I[Entity]Filters) => [entity]Keys.list(filters)
 const { data } = useQuery({ queryKey: buildQueryKey(filters), … })
 ```
 
-One caller, one line: inline it. Extract when the second caller appears, or when the chunk
-holds its own state (a hook) — the same size test as the ternary rule, in the other direction.
+The function only forwards to `[entity]Keys.list`, so the name adds nothing the callee's name
+does not say. Inline it.
+
+```ts
+const toListRow = ([entity]: I[Entity]): I[Entity]Row => ({
+  id: [entity].id,
+  title: [entity].title,
+  authorName: [entity].author.displayName,
+  updatedAt: formatDate([entity].updatedAt),
+})
+
+const rows = [entity]s.map(toListRow)
+```
+
+One caller too, and it stays: `toListRow` names an operation the `map` call would otherwise
+spell out inline. The test is whether the name tells the reader something, not how many
+callers there are or how long the parent is.
 
 ## Magic numbers
 

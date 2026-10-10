@@ -155,131 +155,35 @@ else
   bad "RFW_GUARDS=off disables a guard"
 fi
 
-# --- project-rules.mjs: discovery from Claude Code's own registries ---
-printf '\nproject-rules.mjs\n'
-PR="$ROOT/plugins/react-feature-workflow/skills/review/scripts/project-rules.mjs"
-PRHOME="$WORK/prhome"
-PRPROJ="$(cd "$(mktemp -d "$WORK/prproj.XXXX")" && pwd -P)"
-mkdir -p "$PRHOME/.claude/plugins" "$PRPROJ/.claude/rules" "$PRPROJ/src/entities"
-INSTALL="$PRHOME/cache/vadimgaidai/feature-sliced-design/0.2.0"
-mkdir -p "$INSTALL/skills/structure" "$INSTALL/hooks/scripts"
-echo '## Reviewing' > "$INSTALL/skills/structure/SKILL.md"
-touch "$INSTALL/hooks/scripts/fsd-validator.sh" "$INSTALL/hooks/scripts/model-placement-validator.sh"
-cat > "$PRHOME/.claude/settings.json" <<EOF
-{"enabledPlugins": {"feature-sliced-design@vadimgaidai": true}}
+# --- structure-check.sh (feature-folders and feature-sliced-design): barrel, dangling re-export, use-* placement ---
+printf '\nstructure-check.sh\n'
+for plugin in feature-folders feature-sliced-design; do
+  SC="$ROOT/plugins/$plugin/skills/structure/scripts/structure-check.sh"
+  SCFIX="$WORK/structfix-$plugin"
+  case "$plugin" in
+    feature-folders) MOD="src/features/comments" ;;
+    feature-sliced-design) MOD="src/entities/comments" ;;
+  esac
+  mkdir -p "$SCFIX/$MOD/model"
+  echo 'export interface Comment { id: string }' > "$SCFIX/$MOD/model/types.ts"
+  (cd "$SCFIX" && bash "$SC" "$MOD/model/types.ts" >/dev/null 2>&1)
+  if [ $? -eq 1 ]; then ok "$plugin: missing barrel is flagged"; else bad "$plugin: missing barrel is flagged"; fi
+
+  cat > "$SCFIX/$MOD/index.ts" <<'EOF'
+export type { Comment } from "./model/types"
+export { missing } from "./model/missing"
 EOF
-cat > "$PRHOME/.claude/plugins/installed_plugins.json" <<EOF
-{"version":2,"plugins":{"feature-sliced-design@vadimgaidai":[{"scope":"project","projectPath":"$PRPROJ","installPath":"$INSTALL"}]}}
-EOF
-cat > "$PRPROJ/.claude/rules/api.md" <<'EOF'
----
-paths: src/api/**/*.ts
----
-Rule body
-EOF
-echo '# conventions' > "$PRPROJ/CLAUDE.md"
+  OUT="$WORK/sc-$plugin-out.txt"
+  (cd "$SCFIX" && bash "$SC" "$MOD/model/types.ts" > "$OUT" 2>&1)
+  have "$OUT" "re-exports '\\./model/missing', which does not resolve" "$plugin: dangling barrel re-export is flagged"
 
-PROUT="$WORK/pr-out"
-(cd "$PRPROJ" && RFW_HOME="$PRHOME" node "$PR" src/api/article.ts) > "$PROUT" 2>&1
-have "$PROUT" '^Structure plugin: feature-sliced-design@vadimgaidai$'       "finds the enabled structure plugin via installed_plugins.json"
-have "$PROUT" 'SKILL\.md#reviewing$'                                       "prints the Reviewing section path"
-have "$PROUT" 'fsd-validator\.sh, model-placement-validator\.sh$'          "lists the plugin's hook scripts"
-have "$PROUT" '\.claude/rules/api\.md \(paths: src/api/\*\*/\*\.ts\)$'     "a changed file matching paths: is reported"
-
-PROUT2="$WORK/pr-out2"
-(cd "$PRPROJ" && RFW_HOME="$PRHOME" node "$PR" src/entities/article/ui/card.tsx) > "$PROUT2" 2>&1
-grep -q 'rules/api\.md' "$PROUT2" && bad "a changed file not matching paths: is omitted" || ok "a changed file not matching paths: is omitted"
-
-echo '{}' > "$PRHOME/.claude/settings.json"
-PROUT3="$WORK/pr-out3"
-(cd "$PRPROJ" && RFW_HOME="$PRHOME" node "$PR") > "$PROUT3" 2>&1
-have "$PROUT3" 'FSD-shaped, no plugin enabled' "falls back to a shape warning when no structure plugin is enabled"
-
-# --- review lint config: one violation per rule fires, a clean fixture shows nothing ---
-printf '\nreview lint config\n'
-LINTROOT="$ROOT/plugins/react-feature-workflow/skills/review"
-LINTFIX="$WORK/lintfix"
-mkdir -p "$LINTFIX/src"
-cat > "$LINTFIX/package.json" <<'EOF'
-{"name":"lintfix","private":true}
-EOF
-cat > "$LINTFIX/tsconfig.json" <<'EOF'
-{"compilerOptions":{"target":"ES2022","module":"ESNext","jsx":"react-jsx","strict":true,"skipLibCheck":true},"include":["src/**/*.ts","src/**/*.tsx"]}
-EOF
-
-if (cd "$LINTFIX" && npm install --no-audit --no-fund --silent \
-  eslint typescript-eslint eslint-plugin-react-hooks eslint-plugin-react typescript \
-  >/dev/null 2>"$WORK/lint-install-err"); then
-  ESLINT="$LINTFIX/node_modules/.bin/eslint"
-
-  cat > "$LINTFIX/src/violations.ts" <<'EOF'
-export function pick(a: number, b: boolean) {
-  const x = b ? (a > 0 ? "pos" : "neg") : "zero"
-  return x
-}
-
-export function maybeReturn(flag: boolean) {
-  if (flag) {
-    return 1
-  }
-}
-
-export function withMagic(n: number) {
-  return n * 42
-}
-
-export function badCast(value: unknown) {
-  return (value as any).foo
-}
-
-export function nonNull(value: string | null) {
-  return value!.length
-}
-
-export async function loopAwait(items: string[]) {
-  for (const item of items) {
-    await fetch(item)
-  }
-}
-
-export function threeParams(a: number, b: number, c: number) {
-  return a + b + c
-}
-EOF
-
-  OUT="$WORK/lint-out.txt"
-  (cd "$LINTFIX" && "$ESLINT" --config "$LINTROOT/review.eslint.config.mjs" src/violations.ts) \
-    > "$OUT" 2>&1 || true
-  for rule in no-nested-ternary consistent-return no-magic-numbers \
-    "@typescript-eslint/no-explicit-any" "@typescript-eslint/no-non-null-assertion" \
-    no-await-in-loop max-params "@typescript-eslint/consistent-type-assertions"; do
-    have "$OUT" "$rule" "violation fixture flags $rule"
-  done
-
-  cat > "$LINTFIX/src/clean.ts" <<'EOF'
-export interface Article {
-  id: string
-  title: string
-  createdAt: string
-}
-
-export function formatTitle(title: string, maxLength: number) {
-  if (title.length <= maxLength) return title
-  return `${title.slice(0, maxLength)}…`
-}
-EOF
-
-  CLEAN_OUT="$WORK/lint-clean.txt"
-  if (cd "$LINTFIX" && "$ESLINT" --config "$LINTROOT/review.eslint.config.mjs" src/clean.ts) \
-    > "$CLEAN_OUT" 2>&1; then
-    ok "clean fixture: zero findings"
-  else
-    bad "clean fixture: zero findings"
-    cat "$CLEAN_OUT"
-  fi
-else
-  ok "review lint config: skipped (no network or eslint unavailable)"
-fi
+  mkdir -p "$SCFIX/$MOD/hooks"
+  : > "$SCFIX/$MOD/hooks/use-ok.ts"
+  : > "$SCFIX/$MOD/use-bad.ts"
+  OUT2="$WORK/sc-$plugin-out2.txt"
+  (cd "$SCFIX" && bash "$SC" "$MOD/use-bad.ts" > "$OUT2" 2>&1)
+  have "$OUT2" "use-bad\\.ts: a use-\\*\\.ts hook outside hooks/" "$plugin: use-*.ts outside hooks/ is flagged"
+done
 
 # --- every eval case scaffolds cleanly ---
 printf '\neval scaffolds\n'

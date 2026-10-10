@@ -2,8 +2,8 @@ schema_version: "1.1"
 name: code-shape-conventions
 description: >
   `/review` catches the `code-shape` slop planted on the feature branch: a narrative
-  comment, a third positional parameter, a nested ternary, a loop inside a loop, a boolean
-  flag parameter and a magic number.
+  comment, a third positional parameter, a nested ternary, a `find` over a second
+  collection repeated for every row, a boolean flag parameter and a magic number.
 tags: [review, code-shape]
 plugins: ["../.."]
 
