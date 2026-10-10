@@ -88,6 +88,14 @@ The current screen stays visible, dimmed on `isPending`, instead of flashing the
 
 ## Error boundary with a real retry
 
+A query that throws and a chunk that fails to load need two different retries — plain
+`resetErrorBoundary` only re-renders the boundary's children, it does not re-run either one.
+
+### A query threw (`throwOnError`)
+
+`QueryErrorResetBoundary`'s `reset` clears the flag that makes the query keep re-throwing the
+same cached error, so the next render's `useQuery` call actually retries the fetch:
+
 ```tsx
 const RouteError = ({ error, resetErrorBoundary }: FallbackProps) => {
   const { t } = useTranslation()
@@ -110,9 +118,41 @@ const RouteError = ({ error, resetErrorBoundary }: FallbackProps) => {
 </QueryErrorResetBoundary>
 ```
 
+Without `onReset={reset}`, `resetErrorBoundary` alone re-renders with the same query state,
+which still holds the cached error, and the boundary throws again immediately.
+
+### A chunk failed to load (`lazy()`)
+
 A chunk fetch fails after every deploy on a stale hashed filename; without a boundary the app
-goes blank. `resetErrorBoundary` re-attempts the import, and `onReset={reset}` re-attempts
-the queries inside — without it the retry re-renders the same cached error.
+goes blank. `lazy()` caches the rejected import promise on that one component reference, so
+`resetErrorBoundary` alone re-renders and re-throws the same cached rejection — it never
+re-imports. The retry needs a fresh promise: a new `lazy()` reference, or a full reload of
+the route.
+
+```tsx
+const RouteError = ({ resetErrorBoundary }: FallbackProps) => {
+  const { t } = useTranslation()
+
+  return (
+    <ErrorState
+      title={t("errors.chunkLoadFailed")}
+      action={
+        <Button onClick={() => window.location.reload()}>{t("actions.retry")}</Button>
+      }
+    />
+  )
+}
+
+<ErrorBoundary FallbackComponent={RouteError} resetKeys={[location.pathname]}>
+  <Suspense fallback={<[Entity]PageSkeleton />}>
+    <[Entity]Page />
+  </Suspense>
+</ErrorBoundary>
+```
+
+`resetKeys` recovers the boundary automatically on a route change, which is enough once the
+deploy that broke the old chunk has finished; the reload button is the immediate escape hatch
+for a user already on the broken route.
 
 Boundaries catch render-time throws. A rejected promise in a handler, a `setTimeout` or an
 un-awaited call never reaches one; handle those where they happen.

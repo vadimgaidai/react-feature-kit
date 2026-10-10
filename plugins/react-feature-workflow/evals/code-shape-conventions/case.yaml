@@ -3,7 +3,8 @@ name: code-shape-conventions
 description: >
   `/review` catches the `code-shape` slop planted on the feature branch: a narrative
   comment, a third positional parameter, a nested ternary, a `find` over a second
-  collection repeated for every row, a boolean flag parameter and a magic number.
+  collection repeated for every row, a boolean flag parameter and a magic number — while
+  `overlappingPairs`, a nested loop that must visit every pair, is left alone.
 tags: [review, code-shape]
 plugins: ["../.."]
 

@@ -61,6 +61,8 @@ Load on their own while Claude writes the matching layer. `review` reads their `
 | `code-shape` | Holds the house style for plain code: how much of it there should be, how a function takes its parameters, how branching reads, when a loop is doing repeated work. |
 | `typescript` | Keeps types honest: narrowed once at the boundary, derived from the contract instead of written twice, impossible states made unrepresentable. |
 | `error-handling` | Assigns each error one owner in this stack and says what a catch is allowed to do with it, so failures are neither duplicated nor swallowed. |
+| `routing` | Keeps URL state as the source of truth — filters and pagination restored from the URL, a loader and a query never holding two copies of the same data, nested routes with their own loading boundary. |
+| `react-testing` | Says what a test should prove — the observable result, not an implementation detail — and reviews whether one actually does. |
 
 ## Agents and hooks
 

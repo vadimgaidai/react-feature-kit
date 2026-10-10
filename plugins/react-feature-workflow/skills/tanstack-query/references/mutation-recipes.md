@@ -8,9 +8,10 @@
 
 Sweeping the entity on every write refetches lists that did not change. Match the breadth of the invalidation to the breadth of the change:
 
+Invalidate the edited item, and every list that might contain it:
+
 ```typescript
 onSuccess: (_data, variables) => {
-  // The edited item, and every list that might contain it.
   queryClient.invalidateQueries({ queryKey: [entity]Keys.byId(variables.id) })
   queryClient.invalidateQueries({ queryKey: [entity]Keys.lists() })
 }
@@ -39,6 +40,8 @@ The detail view updates without a round trip; the lists still refetch, because t
 
 For cheap, reversible, high-frequency actions only — a toggle, a reorder, a like:
 
+Three steps in `onMutate`: stop in-flight refetches from landing on top of the optimistic value, snapshot the previous value for rollback, then apply the expected result — once, here, never reapplied on the server response.
+
 ```typescript
 export const useToggle[Entity]Mutation = () => {
   const queryClient = useQueryClient()
@@ -46,13 +49,10 @@ export const useToggle[Entity]Mutation = () => {
   return useMutation({
     mutationFn: [feature]Api.toggle,
     onMutate: async (id: string) => {
-      // 1. Stop in-flight refetches from landing on top of the optimistic value.
       await queryClient.cancelQueries({ queryKey: [entity]Keys.byId(id) })
 
-      // 2. Snapshot for rollback.
       const previous = queryClient.getQueryData<I[Entity]>([entity]Keys.byId(id))
 
-      // 3. Apply the expected result.
       queryClient.setQueryData<I[Entity]>([entity]Keys.byId(id), (old) =>
         old ? { ...old, isActive: !old.isActive } : old
       )
@@ -79,6 +79,41 @@ const isActive = toggle.isPending ? !item.isActive : item.isActive
 ```
 
 React 19's `useOptimistic` covers the same ground for a value that lives in component state rather than the query cache — see the `react` skill.
+
+## Concurrent mutations on the same key
+
+Two toggles fired before either settles race the rollback: the naive version snapshots
+`previous` once per `onMutate` call, so the second mutation's `onError` restores the value from
+*before the first mutation*, erasing whatever the first one already committed.
+
+```typescript
+onMutate: async (id: string) => {
+  await queryClient.cancelQueries({ queryKey: [entity]Keys.byId(id) })
+  const previous = queryClient.getQueryData<I[Entity]>([entity]Keys.byId(id))
+  queryClient.setQueryData<I[Entity]>([entity]Keys.byId(id), (old) =>
+    old ? { ...old, isActive: !old.isActive } : old
+  )
+  return { previous }
+},
+onError: (_error, id, context) => {
+  const current = queryClient.getQueryData<I[Entity]>([entity]Keys.byId(id))
+  if (current?.isActive !== context?.previous?.isActive) {
+    queryClient.setQueryData([entity]Keys.byId(id), context?.previous)
+  }
+},
+onSettled: (_data, _error, id) => {
+  queryClient.invalidateQueries({ queryKey: [entity]Keys.byId(id) })
+},
+```
+
+The guard in `onError` rolls back only if the cache still holds *this* mutation's optimistic
+value — a later mutation may already have overwritten it with its own, and restoring
+`context.previous` over that would erase the later one's state.
+
+The cheaper alternative, and the one to prefer when the action can legitimately fire twice in
+a row: skip the rollback write entirely and let `onSettled`'s invalidation reconcile the cache
+with the server — correct under any number of concurrent calls, at the cost of one extra
+refetch.
 
 ## Mutation state read elsewhere
 

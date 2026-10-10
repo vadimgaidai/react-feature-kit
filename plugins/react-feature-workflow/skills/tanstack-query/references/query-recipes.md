@@ -4,6 +4,46 @@
 >
 > Where these files live and how they are named: the structure skill. What belongs inside them: the `tanstack-query` skill.
 
+## Five states, five renders
+
+The same `useQuery` call passes through states that each need their own render, identified by
+their own flag — never collapsed into one "loading" or one "error" branch:
+
+| State | Flag | Render |
+|---|---|---|
+| Initial load | `isPending` | skeleton the shape of the content |
+| Disabled (`enabled: false`) | `isPending && !isFetching` | the screen's idle state — a prompt, not a skeleton |
+| Background refetch over shown data | `isFetching && !isPending` | the existing content, with a subtle indicator |
+| Pagination/filter switch | `isPlaceholderData` | the previous page, dimmed, "next" disabled |
+| Refetch error over cached data | `isRefetchError` | the cached content, with an inline alert — never blanked |
+
+```tsx
+const { data, isPending, isFetching, isPlaceholderData, isRefetchError } = useQuery({
+  ...[entity]Queries.list({ page }),
+  enabled: Boolean(filters.scope),
+  placeholderData: keepPreviousData,
+})
+
+if (isPending) {
+  return <[Entity]ListSkeleton />
+}
+if (!filters.scope) {
+  return <EmptyState title={t("[entity].selectScope")} />
+}
+
+return (
+  <>
+    {isRefetchError && <Alert variant="destructive">{t("[entity].refetchFailed")}</Alert>}
+    <[Entity]List items={data} className={cn(isPlaceholderData && "opacity-50")} />
+    {isFetching && !isPlaceholderData && <InlineSpinner />}
+  </>
+)
+```
+
+A disabled query is `isPending: true` with no request in flight — distinguish it from the
+real initial load by checking `enabled`'s own condition, not by adding a second `isLoading`
+flag.
+
 ## Dependent query — `enabled`, never an early return
 
 ```tsx
@@ -22,8 +62,9 @@ Note the cast: the options factory takes a real `string`, and `enabled` is what 
 
 `list({})` **as a query** is a real cache entry: the unfiltered list. That is a different act from invalidation, where the group key is `lists()` — reading one filter combination and invalidating all of them are not the same call.
 
+Narrowing which re-renders this causes: this component re-renders only when the count changes, not on every change to the list.
+
 ```tsx
-// Narrow: this component re-renders only when the count changes.
 const { data: activeCount } = useQuery({
   ...[entity]Queries.list({}),
   select: (items) => items.filter((item) => item.status === [Entity]Status.Active).length,
@@ -74,15 +115,15 @@ const { data, isPlaceholderData } = useQuery({
 
 ## Infinite list
 
+The key is `infinite(filters)` — its own entry in the factory, next to `list(filters)` — so the paginated cache never collides with the plain list's. The cursor is not in the key: TanStack stores every page under that one key, and only `filters` belongs there, because changing a filter starts a different list.
+
 ```typescript
 // entities/[entity]/api/[entity].queries.ts
 export const [entity]Queries = {
   infinite: (filters: I[Entity]Filters) =>
     infiniteQueryOptions({
-      queryKey: [entity]Keys.list(filters),
+      queryKey: [entity]Keys.infinite(filters),
       queryFn: ({ pageParam }) => [entity]Api.getList({ ...filters, cursor: pageParam }),
-      // The cursor is NOT in the key — TanStack stores the pages under one key.
-      // `filters` is, because changing a filter is a different list.
       initialPageParam: null as string | null,
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     }),

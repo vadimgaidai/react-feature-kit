@@ -6,8 +6,9 @@ When you build on top of a shadcn (or any base) component, **inherit its props**
 
 ### shadcn `Button` — the base
 
+Its signature (`components/ui/button.tsx`), body omitted — it is shadcn's own, never hand-edited:
+
 ```tsx
-// components/ui/button.tsx
 function Button({
   className,
   variant = "default",
@@ -17,9 +18,7 @@ function Button({
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
-  }) {
-  // ...
-}
+  })
 ```
 
 ### A domain-specific wrapper (`SubmitButton`)
@@ -27,9 +26,9 @@ function Button({
 ```tsx
 // [feature]/submit-button.tsx
 import type { ComponentProps, FC } from "react"
-import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 
 interface ISubmitButtonProps extends ComponentProps<typeof Button> {
@@ -50,7 +49,8 @@ export const SubmitButton: FC<ISubmitButtonProps> = ({
       className={cn("relative", className)}
       {...rest}
     >
-      {isPending ? <Loader2 className="size-4 animate-spin" /> : children}
+      {isPending && <Spinner data-icon="inline-start" />}
+      {children}
     </Button>
   )
 }
@@ -68,7 +68,7 @@ Rules:
 - Use `ComponentProps<typeof Button>` (or the exported `ButtonProps`) — never copy-paste props.
 - Forward `...rest` to the base component.
 - Don't re-declare variant props — re-export base variants if a consumer needs them.
-- A domain wrapper lives with the code that owns it, never in the shadcn-managed primitives folder.
+- Placement: the structure skill loaded in this project.
 
 ### Another example — Input with leading icon
 

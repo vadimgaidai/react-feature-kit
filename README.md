@@ -37,19 +37,28 @@ claude plugin install feature-folders@vadimgaidai --scope project         # ever
 
 ## What to type
 
-| You want | Command |
-|---|---|
-| a feature with data, forms or state | `/react-feature-workflow:spec add comments to articles`, then `plan`, `implement`, `verify`, `review` |
-| a change to a module that exists | `/react-feature-workflow:spec change: paginate the comment list` |
-| a landing page from Figma | `@react-feature-workflow:theme-sync <figma-url>` once, then `spec layout: …` |
-| one block from a Figma frame | `@react-feature-workflow:block-builder <node-url> into src/widgets/hero` |
-| a bug fixed | `@react-feature-workflow:bug-fixer the form submits twice` |
+```bash
+# a feature with data, forms or state — then plan, implement, verify, review
+/react-feature-workflow:spec add comments to articles
+
+# a change to a module that exists
+/react-feature-workflow:spec change: paginate the comment list
+
+# a landing page from Figma — theme-sync once, then spec layout: …
+@react-feature-workflow:theme-sync <figma-url>
+
+# one block from a Figma frame
+@react-feature-workflow:block-builder <node-url> into src/widgets/hero
+
+# a bug fixed
+@react-feature-workflow:bug-fixer the form submits twice
+```
 
 Worked examples with what lands on disk: [docs/USE-CASES.md](./docs/USE-CASES.md). Why it is shaped this way: [docs/DESIGN.md](./docs/DESIGN.md).
 
 ## Plugins
 
-- [react-feature-workflow](./plugins/react-feature-workflow): the six commands, seven convention skills that load while Claude writes the matching layer, three Figma and bug agents.
+- [react-feature-workflow](./plugins/react-feature-workflow): the six commands, nine convention skills that load while Claude writes the matching layer, three Figma and bug agents.
 - [feature-sliced-design](./plugins/feature-sliced-design): hooks that reject a file on the wrong layer, a wrong filename, a barrel import or an upward import before it is written.
 - [feature-folders](./plugins/feature-folders): the same for projects without layers: global buckets plus feature, page and layout modules. Blocks new files only, so an old tree is left alone.
 

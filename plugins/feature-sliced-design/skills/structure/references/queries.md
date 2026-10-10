@@ -3,6 +3,12 @@
 > Canonical code shape. Replace the placeholders (`[entity]` kebab-case, `[Entity]` PascalCase, `I[Entity]`/`T[Entity]` type identifiers) with real names.
 > This file is the **shape**: where the code lives, what it is named, how the key factory is called. The **policy** — what belongs in a key, when to use `enabled`/`select`/`keepPreviousData`, how narrowly to invalidate — is the `tanstack-query` skill (`react-feature-workflow` plugin). Load it too when you are writing the data layer.
 
+### The shared client (`src/shared/lib/react-query/client.ts`)
+
+One `QueryClient`, instantiated once, imported by `app/` to build the provider. Its defaults
+(`staleTime`, `retry`, `QueryCache`/`MutationCache` handlers) are the `tanstack-query` skill's
+policy; this file only says where it lives.
+
 ### The factory itself (`src/shared/lib/react-query/query-key-factory.ts`)
 
 ```typescript

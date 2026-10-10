@@ -57,5 +57,30 @@ export function badgeSize(density: number, compact: boolean, rows: BadgeRow[], t
 }
 EOF
 
+cat > src/entities/badge/ui/badge-overlaps.ts <<'EOF'
+interface BadgeBox {
+  id: string
+  x: number
+  y: number
+  size: number
+}
+
+function overlaps(a: BadgeBox, b: BadgeBox) {
+  return Math.abs(a.x - b.x) < a.size && Math.abs(a.y - b.y) < a.size
+}
+
+export function overlappingPairs(boxes: BadgeBox[]) {
+  const pairs: Array<[string, string]> = []
+  for (let i = 0; i < boxes.length; i += 1) {
+    for (let j = i + 1; j < boxes.length; j += 1) {
+      if (overlaps(boxes[i], boxes[j])) {
+        pairs.push([boxes[i].id, boxes[j].id])
+      }
+    }
+  }
+  return pairs
+}
+EOF
+
 git add -A
-git commit -qm "feat(badge): size helper"
+git commit -qm "feat(badge): size helper, overlap pairs"

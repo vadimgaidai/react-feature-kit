@@ -10,14 +10,13 @@ const [isPending, startTransition] = useTransition()
 const handleSubmit = () => {
   startTransition(async () => {
     await submit(payload)
-    // State updates after the await are still inside the transition.
   })
 }
 
 return <Button onClick={handleSubmit} disabled={isPending}>{t("actions.save")}</Button>
 ```
 
-`isPending` stays `true` for the whole async body, so a hand-rolled `const [isLoading, setIsLoading] = useState(false)` around a submit is redundant. Errors are not caught for you — `try`/`catch` inside the transition, or let an error boundary take it.
+State updates after the `await` are still inside the transition. `isPending` stays `true` for the whole async body, so a hand-rolled `const [isLoading, setIsLoading] = useState(false)` around a submit is redundant. Errors are not caught for you — `try`/`catch` inside the transition, or let an error boundary take it.
 
 Around a navigation, a transition keeps the outgoing screen on-screen instead of flashing a Suspense fallback:
 
@@ -58,20 +57,17 @@ Skip them. This is not a style preference, it is that they occupy a slot React H
 - **The error surface.** The action's returned state duplicates `formState.errors`, which is already driven by the resolver and already rendered through `FieldDescription`.
 - **The server action.** The `action` prop exists to post to one. A client-rendered SPA has none; here it degrades to a callback with extra ceremony and no client validation.
 
-So there is no "small form" exception — a newsletter input or a one-field filter still goes through `useForm` + `zodResolver` with its schema in `model/schemas.ts`, because a second form pattern costs every future reader a decision. See the `react-hook-form-zod` skill for the shape.
+So there is no "small form" exception — a newsletter input or a one-field filter still goes through `useForm` + `zodResolver`, because a second form pattern costs every future reader a decision. See the `react-hook-form-zod` skill for the schema's placement and the shape.
 
 What React 19 *does* add to a form in this stack: `useTransition` for the non-form async work around it (a navigation after success), and `useOptimistic` for a local optimistic value — both above.
 
 ## `use`
 
 ```tsx
-// Context — may be called conditionally, unlike useContext.
 const theme = use(ThemeContext)
-
-// Promise — suspends until it resolves. The promise must be created outside render.
 const message = use(messagePromise)
 ```
 
-The promise has to be stable across renders: created by a cache, a suspense-aware library, or passed down as a prop. `use(fetch(url))` in a component body creates a new promise every render and suspends forever.
+`use(Context)` may be called conditionally, unlike `useContext`. `use(promise)` suspends until the promise resolves, and the promise must be created outside render — it has to be stable across renders: created by a cache, a suspense-aware library, or passed down as a prop. `use(fetch(url))` in a component body creates a new promise every render and suspends forever.
 
 In this stack the promise form is rarely the right tool — `useSuspenseQuery` gives you the same suspension with caching, deduplication and invalidation. Reach for `use(Context)` freely; reach for `use(promise)` only when there is a real promise you already own.

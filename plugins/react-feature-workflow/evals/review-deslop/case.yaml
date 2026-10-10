@@ -5,7 +5,8 @@ description: >
   one planted instance of each of the six slop questions (a factory for one operation, a
   helper that repeats `shared/lib`, state synced from props, a hook that renames `.length`,
   a try/catch around a typed map, a fetch-in-effect beside the project's query layer), a
-  removed export, and an index key. Every finding carries what / why not here / fix and
+  removed export, and an index key — while `CommentDraft`, a draft copied from a prop on
+  purpose and reset by `key`, is left alone. Every finding carries what / why not here / fix and
   a `file:line`; the review edits nothing, reads the sibling only in the ranges a
   comparison needs, and ends with a verdict.
 tags: [review, slop]

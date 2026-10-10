@@ -194,10 +194,41 @@ export function CommentList({ comments, first, last }: CommentListProps) {
 }
 EOF
 
+cat > src/entities/comment/ui/comment-draft.tsx <<'EOF'
+import { useState } from "react"
+import type { Comment } from "../model/types"
+
+interface CommentDraftProps {
+  comment: Comment
+  onSave: (body: string) => void
+}
+
+export function CommentDraft({ comment, onSave }: CommentDraftProps) {
+  const [body, setBody] = useState(comment.body)
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSave(body)
+      }}
+    >
+      <textarea value={body} onChange={(event) => setBody(event.target.value)} />
+      <button type="submit">Save</button>
+    </form>
+  )
+}
+
+export function CommentEditor({ comment, onSave }: CommentDraftProps) {
+  return <CommentDraft key={comment.id} comment={comment} onSave={onSave} />
+}
+EOF
+
 cat > src/entities/comment/index.ts <<'EOF'
 export type { Comment } from "./model/types"
 export { useComments } from "./api/comment.api"
 export { CommentList } from "./ui/comment-list"
+export { CommentEditor } from "./ui/comment-draft"
 EOF
 
 git add -A

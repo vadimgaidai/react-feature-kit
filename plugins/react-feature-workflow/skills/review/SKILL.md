@@ -55,7 +55,8 @@ names, and never a plugin's presence as the precondition for a rule written down
   structure rules → the `structure` angle says so and makes no placement finding.
 - The convention skill a hunk's content puts it under: an effect, state, memo, context or
   JSX → `react` (and `ui-conventions` for `className`); a query key, `useQuery`, mutation or
-  invalidation → `tanstack-query`; a schema or form → `react-hook-form-zod`; `try`/`catch`,
+  invalidation → `tanstack-query`; a schema or form → `react-hook-form-zod`; a route, loader,
+  search param or navigation hook → `routing`; a test file → `react-testing`; `try`/`catch`,
   `onError`, a toast, `??`/`?.` on data → `error-handling`; a type, cast, narrowing or
   `switch` on a union → `typescript`; branching, a helper, a loop over a collection →
   `code-shape`. Read that skill's `## Reviewing` section; open a reference file only for the
@@ -99,7 +100,9 @@ module and why; none fits → the `sibling` angle says so.
 
 **`skills` — is this hunk an instance of a sentence in its governing skill's `## Reviewing`?**
 A candidate quotes the sentence and the line. No sentence applies → no finding; there is no
-spirit of the skill. The applicable `CLAUDE.md` / rules files are read the same way.
+spirit of the skill. A hunk that has a rubric's shape but meets the exception the same skill
+states — a draft reset by `key`, a nested loop that must visit every pair, a sort on a local
+copy, a `reset` on an entity change — is named as acceptable with that reason, never reported. The applicable `CLAUDE.md` / rules files are read the same way.
 
 **`structure` — is this where the stated rules put it?** Only against rules found in
 step 2: is this local thing promoted while only one module reads it, is this page holding

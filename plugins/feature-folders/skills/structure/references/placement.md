@@ -18,6 +18,7 @@ never "because it might be reused".
 | Domain type (not from an API) | `<module>/types.ts` | a second module needs the same shape | promote to whichever module both share, or `src/api/<resource>/types.ts` if it is the resource's shape |
 | Constant / enum-like `as const` | `<module>/constants.ts` | read by two modules, or it configures the app itself (a route path, a feature flag) | `src/config/` |
 | Function | `<module>/` (inline or a local helper file) | it is pure (no domain types, no module state) **and** a second module needs it | `src/lib/` |
+| Validation schema (zod) | `<module>/schemas.ts`, next to the form it validates | a second module needs the exact same schema | promote to whichever module both share |
 | HTTP call / query / mutation | never local — see below | — | `src/api/<resource>/` always, from the first call |
 
 ## The one role that is never local: API

@@ -9,6 +9,7 @@
 |---|---|
 | A base primitive (shadcn or hand-installed) | `src/components/ui/[name].tsx` — CLI-managed, flat, never edited to serve one caller |
 | A domain wrapper around a primitive, used by one module | that module's own `components/` |
+| A form component | that module's own `components/`, one form per file (`[name]-form.tsx`); its schema is `<module>/schemas.ts`, never inline |
 | A domain-free component used by two+ modules | `src/components/[name].tsx` |
 | A compound component (`.Root` + coupled sub-parts) | a folder — `src/components/[name]/` globally, or `<module>/components/[name]/` locally |
 

@@ -1,6 +1,6 @@
 # Evals
 
-Fourteen cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
+Seventeen cases over the claims in [docs/DESIGN.md](../../../docs/DESIGN.md) — the ones that
 are behaviour, not documentation, and that a regression would break silently.
 
 | Case | Asserts |
@@ -19,6 +19,9 @@ are behaviour, not documentation, and that a regression would break silently.
 | `code-shape-conventions` | `review` catches the `code-shape` slop planted on a feature branch: a narrative comment, a third positional parameter, a nested ternary, a `find` over a second collection repeated per row, a boolean flag parameter, a magic number. |
 | `typescript-conventions` | `review` catches the `typescript` slop planted on a feature branch: an `as` cast outside a boundary, `any`, a non-null assertion, an optional-everything interface, a non-exhaustive switch over a union. |
 | `error-handling-conventions` | `review` catches the `error-handling` slop planted on a feature branch: a catch that logs and continues, a try/catch in a component body, a duplicated `onError`, a fallback that silences a required field, a generic toast for every failure. |
+| `routing-conventions` | `review` catches the `routing` slop planted on a feature branch: a filter kept in `useState` instead of the URL, a search-param update that drops the others, a loader holding its own copy of data instead of prefetching into the query cache, a hand-rolled navigation-pending flag, a layout that blanks its chrome while a child route loads. |
+| `react-testing-conventions` | `review` catches the `react-testing` slop planted on a feature branch: a test that mocks the component under test, and an arbitrary `setTimeout` standing in for a testing-library query. |
+| `review-pairs` | `review` finds four defects and leaves their legitimate twins alone, each pair in separate files: props sorted in place / a local copy sorted; a compound part with its own copy of `Root`'s state / a part reading context; `reset` on every refetch / reset on entity change with `keepDirtyValues`; an infinite query on the list key / its own `infinite(filters)` entry. `review-deslop` and `code-shape-conventions` carry the other two twins (an editable draft reset by `key`, a necessary pair-wise loop). |
 
 No `llm` graders are left: the two the retired `review-scoped-to-diff` case had asked whether
 a named field and a named defect appear in the report, which a regex answers without a judge. Three judge votes

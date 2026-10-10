@@ -14,6 +14,7 @@
 |---|---|
 | A shadcn/base primitive | `shared/ui/[name].tsx` — CLI-managed, flat |
 | A domain wrapper around a primitive (`SubmitButton`, `SearchInput`) | the owning module's `ui/` — `features/[feature]/ui/`, `entities/[entity]/ui/` |
+| A form component | the owning feature's `ui/` — `features/[feature]/ui/[name]-form.tsx`, one form per file; its schema goes in the same module's `model/schemas.ts` |
 | A composite reusable block, incl. compound components | `widgets/[widget]/ui/` |
 | A route-level composition | `pages/[name]/[name]-page.tsx` — composes, holds no UI logic of its own |
 
