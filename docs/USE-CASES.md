@@ -1,6 +1,6 @@
 # Use cases
 
-Eight situations worked end to end: what you type, what appears on disk, what comes back, and where the kit stops instead of guessing. All commands come from `react-feature-workflow`; the last two scenarios need `feature-sliced-design` and `feature-folders` respectively — never both installed together.
+Nine situations worked end to end: what you type, what appears on disk, what comes back, and where the kit stops instead of guessing. All commands come from `react-feature-workflow`; the last two scenarios need `feature-sliced-design` and `feature-folders` respectively — never both installed together.
 
 ---
 
@@ -8,24 +8,33 @@ Eight situations worked end to end: what you type, what appears on disk, what co
 
 There is a backend contract, a form, a list, and three UI states nobody has written down yet.
 
-1. `/react-feature-workflow:analyze add comments to articles` — classifies the request as a **feature** and interviews you one question per turn, recommended answer first. It asks for the Swagger URL and the endpoints as `GET /articles/{id}/comments`, `POST /articles/{id}/comments` — never for request or response shapes, because it extracts those itself.
-2. The interview ends with two files in `.planning/comments/`:
-   - `contract.md` — the named endpoints cut out of the OpenAPI spec by `contract-slice.mjs`: `$ref`s inlined, every field marked `REQUIRED` or `optional`, enums expanded, formats kept. This file, not the spec, is what the implementer reads.
-   - `PLAN.md` — modules in build order, queries and what each mutation invalidates, form schema rules, loading/empty/error states per component, and 3–7 acceptance criteria.
-3. Read `PLAN.md`. It is a normal markdown file, and this is the cheapest point in the flow to change your mind — no code exists yet.
-4. In a **fresh session**: `/react-feature-workflow:implement`. It reads the plan, the contract, `CLAUDE.md` and one existing module of the same kind as a tone reference, builds every module in the plan's order, and runs your typecheck.
-5. In a third session: `/react-feature-workflow:review`. It reads the diff with git, runs your typecheck, lint and tests, and asks four sets of questions of each hunk — `skills` (the governing convention skill's `## Reviewing` sentences), `structure` (against the placement rules the project states, when it states any), `sibling` (drift against the module the plan names), `slop` (was this decision necessary: generality, repetition, redundant state, an empty layer, unjustified defence, project mismatch). Every finding is three parts — what, why not here, fix — with a `file:line`, and the report ends with a verdict.
+1. `/react-feature-workflow:spec add comments to articles` — classifies the request as a **feature**, rates the nine gap categories (data, UX flow, UI states, permissions, persistence, failures, non-functional, done signals) against the request, and asks at most five questions, one per turn, recommended answer first. It asks for the Swagger URL and the endpoints as `GET /articles/{id}/comments`, `POST /articles/{id}/comments` — never for request or response shapes, and never for modules or libraries.
+2. It writes `.planning/comments/SPEC.md`: behaviour as `R-1 WHEN … THE UI SHALL …` rules, UI states, permissions, failure scenarios, 3–9 acceptance criteria citing the rules they prove, and an `## Assumptions` list for every guess it made instead of asking a sixth question.
+3. Read `SPEC.md`. It holds no file paths and no code, so this is the cheapest point in the flow to change your mind — no modules exist yet, let alone code.
+4. `/react-feature-workflow:plan` — asks only what the spec and the codebase cannot answer (a dependency, a name collision, a HOW the spec left open), then writes two more files to `.planning/comments/`:
+   - `contract.md` — the endpoints the spec names cut out of the OpenAPI spec by `contract-slice.mjs`: `$ref`s inlined, every field marked `REQUIRED` or `optional`, enums expanded, formats kept. This file, not the raw spec, is what the implementer reads.
+   - `PLAN.md` — modules in build order, each with the `AC-` ids it serves, queries and what each mutation invalidates, form schema rules, boundaries, and a Coverage table. A readiness check runs first: every criterion mapped to a module and back, and anything the spec's behaviour needs that the contract has no source for, named rather than guessed.
+5. In a **fresh session**: `/react-feature-workflow:implement`. It reads `SPEC.md` for behaviour, `PLAN.md` for the modules, the contract, `CLAUDE.md` and one existing module of the same kind as a tone reference, builds every module in the plan's order, and runs your typecheck.
+6. In a fourth session: `/react-feature-workflow:review`. It reads the diff with git, runs your typecheck, lint and tests, and asks four sets of questions of each hunk — `skills` (the governing convention skill's `## Reviewing` sentences), `structure` (against the placement rules the project states, when it states any), `sibling` (drift against the module the plan names), `slop` (was this decision necessary: generality, repetition, redundant state, an empty layer, unjustified defence, project mismatch). Every finding is three parts — what, why not here, fix — with a `file:line`, and the report ends with a verdict.
 
-**Where it stops.** `implement` takes every request and response shape from `contract.md`. When the plan and the contract disagree about a field, it follows the contract and says so; a field that is not in the contract does not go into the types. `review` never edits — it writes `REVIEW.md`, and `refine` verifies each item against the code before applying or declining it with evidence; correctness, contract compliance and acceptance criteria are not its job, and the report names `/code-review`, `/security-review` and `/simplify` for what is.
+**Where it stops.** `implement` takes every request and response shape from `contract.md` and every behaviour from `SPEC.md`. When the plan and the contract disagree about a field, it follows the contract and says so; when the plan and the spec disagree about behaviour, the spec wins the same way; a field that is not in the contract does not go into the types. `review` never edits — it writes `REVIEW.md`, and `refine` verifies each item against the code before applying or declining it with evidence; correctness, contract compliance and acceptance criteria are not its job, and the report names `/code-review`, `/security-review` and `/simplify` for what is.
 
-**Why fresh sessions.** Everything the build needs is in the two files, so the planning conversation adds nothing — and a session reviewing code it just wrote is biased toward approving it.
+**Why fresh sessions.** Everything the build needs is in the planning files, so the conversation that produced them adds nothing — and a session reviewing code it just wrote is biased toward approving it.
+
+## A change to something that already exists
+
+The comment list needs pagination; the module shipped three sprints ago.
+
+`/react-feature-workflow:spec change: the comment list paginates, 20 per page` gets the **change** shape: the same spec in delta form — what is added, modified, removed — plus `## Unchanged behaviour`, the section naming what must keep working exactly as it does today (oldest first, the empty state, the signed-out reader seeing no form). `plan` then plans against the delta, and the unchanged list is what a later regression is measured against.
+
+**Where it stops.** The delta spec names behaviour, not the diff: which files change is `plan`'s answer, and a change that turns out to need a new module still goes through the same two files.
 
 ## A landing page from a Figma file
 
 Eight sections, no data, and a design whose palette the app does not have yet.
 
 1. `@react-feature-workflow:theme-sync https://figma.com/design/XX/landing` — once per design. Reads the Figma variables, maps them onto the shadcn token set by role rather than by name, writes both the light and dark palettes into your CSS, and lists every design variable that had no counterpart.
-2. `/react-feature-workflow:analyze layout: build the landing from https://figma.com/design/XX/landing` — the `layout:` prefix is your classification, so the shape is settled before the interview starts; without a prefix, `analyze` reads the request and decides the shape itself. The interview is short: page name, one node URL per block (a block is a section — hero, pricing, footer; a page is typically 3–8 of them), which composites repeat across blocks, text/i18n, and what "done" means. No API questions — there is no data.
+2. `/react-feature-workflow:spec layout: build the landing from https://figma.com/design/XX/landing` — the `layout:` prefix is your classification, so the shape is settled before the interview starts; without a prefix, `spec` reads the request and decides the shape itself. The light spec is short: page name, one node URL per block (a block is a section — hero, pricing, footer; a page is typically 3–8 of them), which composites repeat across blocks, text/i18n, and 2–4 acceptance criteria. No API questions — there is no data. Then `/react-feature-workflow:plan` turns the blocks into modules with one Coverage row each.
 3. `/react-feature-workflow:implement` — hands each block to the `block-builder` subagent, one call per block, then assembles the page itself. The Figma payloads are fetched and spent inside the subagents; your session receives components and a short report.
 
 **What comes back.** Per block: files written, which shadcn primitives were reused, anything that needs `npx shadcn add`, and every design value that had no token — flagged `NO MATCH`, never silently approximated to the nearest color.
@@ -42,7 +51,7 @@ A hero from a frame, into an existing page.
 
 One subagent call. It fetches the design context for that node only — never the siblings — builds the component from shadcn primitives and semantic tokens with flex/grid (never `fixed`: a block must not assume where on the page it lives), downloads the exported icons and images into the repo because Figma's asset URLs expire, and reports what it reused and what had no token.
 
-**Where it stops.** Run `/react-feature-workflow:analyze` on a request this small and its first step — classifying the shape — tells you to call `block-builder` and writes no plan. Prefixing it yourself, `/react-feature-workflow:analyze block: the hero from <node-url>`, gets the same answer without the classification.
+**Where it stops.** Run `/react-feature-workflow:spec` on a request this small and its first step — classifying the shape — tells you to call `block-builder` and writes no spec. Prefixing it yourself, `/react-feature-workflow:spec block: the hero from <node-url>`, gets the same answer without the classification.
 
 ## A bug, without the workflow
 
@@ -88,7 +97,7 @@ Requires `feature-sliced-design`. Claude, mid-task, tries to write `src/utils/fo
 
 The write is rejected before it reaches disk — `src/utils/` is not an FSD layer — and the rejection message names where the file belongs, so Claude moves it in the same turn instead of you catching it in review. The same hooks reject `UserCard.tsx` (files are kebab-case), a barrel import of `@/shared/ui` (direct sub-path imports only), an `export interface IComment` written into a `ui/*.tsx` file (domain types go in `model/types.ts`), and `src/features/comments` importing from `src/features/auth` (sideways, never allowed).
 
-For a new module, the skeleton is not generated at all: `analyze` runs the plugin's `scaffold.sh`, which creates the directories, barrels and empty model files in one shell call. Generation then spends tokens only on the code that differs per feature. The script refuses to touch an existing module — a refusal means the module exists and should be extended, not recreated.
+For a new module, the skeleton is not generated at all: `plan` runs the plugin's `scaffold.sh`, which creates the directories, barrels and empty model files in one shell call. Generation then spends tokens only on the code that differs per feature. The script refuses to touch an existing module — a refusal means the module exists and should be extended, not recreated.
 
 ## A legacy project, not a layered one
 

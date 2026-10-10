@@ -2,7 +2,7 @@
 
 Two plugins for [Claude Code](https://claude.com/claude-code): a plan / build / review workflow for React features, and Feature-Sliced Design structure enforcement.
 
-The workflow is organized around keeping the context window small and the API honest. Request and response shapes are cut out of your OpenAPI spec by a script, so field names are never guessed. Figma frames are read inside subagents that return components and a short report, not payloads. The plan is a file on disk, so building and reviewing run in fresh sessions without the planning chat. Module skeletons come from a shell script, not from generation, and the module a build mirrors is outlined by another rather than read.
+The workflow is organized around keeping the context window small and the API honest. The behaviour is settled in a spec a human reads before any module exists, and the plan cites its acceptance criteria instead of copying them. Request and response shapes are cut out of your OpenAPI spec by a script, so field names are never guessed. Figma frames are read inside subagents that return components and a short report, not payloads. The plan is a file on disk, so building and reviewing run in fresh sessions without the planning chat. Module skeletons come from a shell script, not from generation, and the module a build mirrors is outlined by another rather than read.
 
 ## Install
 
@@ -18,25 +18,26 @@ Keep `--scope project` — without it the install defaults to `user` scope and t
 
 ## Which command do I run?
 
-`/analyze` classifies every request as one of three shapes — a block, a page, or a feature — and scales the interview and the plan to it.
+`/spec` classifies every request — a block, a page, a feature, or a change to something that exists — and scales the spec to it. It writes the behaviour; `/plan` writes the modules.
 
 | You want… | Run |
 |---|---|
 | one block from a Figma frame as a component | `@react-feature-workflow:block-builder <node-url> into <path>` — no planning needed |
-| a landing / marketing page from a Figma file | `@react-feature-workflow:theme-sync` once, then `/react-feature-workflow:analyze` |
-| a feature with an API, forms or state | `/react-feature-workflow:analyze`, then `/react-feature-workflow:implement`, then `/react-feature-workflow:review`, each in a fresh session |
+| a landing / marketing page from a Figma file | `@react-feature-workflow:theme-sync` once, then `/react-feature-workflow:spec` and `/react-feature-workflow:plan` |
+| a feature with an API, forms or state | `/react-feature-workflow:spec`, then `/react-feature-workflow:plan`, then `/react-feature-workflow:implement`, then `/react-feature-workflow:review`, each in a fresh session |
+| a change to a module that already exists | `/react-feature-workflow:spec change: …` — a delta spec with what must keep working, then `plan` |
 | changes to what was just built, before review | `/react-feature-workflow:refine <what to change>` — fixes against the same plan, updates `PLAN.md` when you changed your mind |
 | the app theme to match a design | `@react-feature-workflow:theme-sync <figma-url>` |
 | one bug fixed | `@react-feature-workflow:bug-fixer <describe the bug>` |
 | an OpenAPI spec trimmed to the endpoints you use | `/react-feature-workflow:api-contract` |
 
-Not sure which shape your request is? Run `/react-feature-workflow:analyze` — classifying the request is its first step. Or classify it yourself with a prefix: `/react-feature-workflow:analyze layout: build the landing from <url>` (also `block:` and `feature:`) — with a prefix the shape is your call, without one `analyze` determines it from the request.
+Not sure which shape your request is? Run `/react-feature-workflow:spec` — classifying the request is its first step. Or classify it yourself with a prefix: `/react-feature-workflow:spec layout: build the landing from <url>` (also `block:`, `feature:` and `change:`) — with a prefix the shape is your call, without one `spec` determines it from the request.
 
 Seven situations worked end to end — a feature with an API, a landing assembled from Figma blocks, a rebrand, a contract that drifted — are in [docs/USE-CASES.md](./docs/USE-CASES.md), including what each command writes to disk and where it stops instead of guessing.
 
 ## The plugins
 
-- **[react-feature-workflow](./plugins/react-feature-workflow)** — `/analyze`, `/implement`, `/review` and `/api-contract`; four convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) that load themselves as Claude writes the matching layer; three subagents (`theme-sync`, `block-builder`, `bug-fixer`) that keep Figma payloads and bug reproductions out of your session. Full walkthrough in its README.
+- **[react-feature-workflow](./plugins/react-feature-workflow)** — `/spec`, `/plan`, `/implement`, `/refine`, `/review` and `/api-contract`; four convention skills (React 19, TanStack Query, shadcn/ui, RHF + Zod) that load themselves as Claude writes the matching layer; three subagents (`theme-sync`, `block-builder`, `bug-fixer`) that keep Figma payloads and bug reproductions out of your session. Full walkthrough in its README.
 - **[feature-sliced-design](./plugins/feature-sliced-design)** — a `structure` skill, a module scaffolder, and three `Write|Edit` hooks that reject a misplaced file, a non-kebab-case filename or a barrel import at write time, so the mistake never reaches review. Needs `jq`.
 - **[feature-folders](./plugins/feature-folders)** — the same kind of guardrails for a project that isn't FSD: global buckets (`components`, `hooks`, `providers`, `lib`, `config`, `api`) plus feature/page/layout modules, and a placement table that says when something is local vs. global instead of leaving it to guesswork. Its hook only blocks **new** misplaced files, so it doesn't fight an existing codebase. Don't install alongside `feature-sliced-design` — pick the one matching the project.
 

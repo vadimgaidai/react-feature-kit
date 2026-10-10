@@ -2,7 +2,7 @@
 
 A plan / build / review workflow for [Claude Code](https://claude.com/claude-code), plus self-loading React conventions and Figma agents. The workflow core works in any TypeScript project; the React skills load only where they apply.
 
-`/analyze` interviews you and writes the spec to disk: `PLAN.md` plus an API contract sliced from your OpenAPI spec, so field names come from the backend rather than from Claude. `/implement` builds from those files in a fresh session; `/review` checks the diff against the convention skills and the sibling module in a third, so the reviewer hasn't just written the code it judges. Figma frames are read by subagents that return components and a short report — the payloads never enter your session.
+`/spec` interviews you and writes the behaviour to disk as `SPEC.md` — rules with ids, UI states, permissions, acceptance criteria — and you fix it before any module exists. `/plan` turns it into `PLAN.md` plus an API contract sliced from your OpenAPI spec, each module citing the criteria it serves, so field names come from the backend rather than from Claude. `/implement` builds from those files in a fresh session; `/review` checks the diff against the convention skills and the sibling module in a third, so the reviewer hasn't just written the code it judges. Figma frames are read by subagents that return components and a short report — the payloads never enter your session.
 
 ## Install
 
@@ -14,9 +14,9 @@ claude plugin install react-feature-workflow@vadimgaidai --scope project
 
 Keep `--scope project` (the default is `user` — the plugin would load in every project you open), then commit the `.claude/settings.json` it writes. From a running session, use `/plugin` and pick project scope. Details: [Getting started](../../docs/GETTING-STARTED.md), [Claude Code plugin docs](https://code.claude.com/docs/en/discover-plugins).
 
-## Three kinds of work
+## Four kinds of work
 
-`analyze` classifies the request first — a block, a page, or a feature — and scales the interview and the plan to it. Or classify it yourself with a prefix — `analyze block: …`, `analyze layout: …`, `analyze feature: …` — then the shape is your call, not the model's. Each of these is worked end to end, with what comes back and where each command stops, in [Use cases](../../docs/USE-CASES.md).
+`spec` classifies the request first — a block, a page, a feature, or a change to something that exists — and scales the spec to it. Or classify it yourself with a prefix — `spec block: …`, `spec layout: …`, `spec feature: …`, `spec change: …` — then the shape is your call, not the model's. Each of these is worked end to end, with what comes back and where each command stops, in [Use cases](../../docs/USE-CASES.md).
 
 ### A block — a hero, a card, a header
 
@@ -26,12 +26,13 @@ No planning. One subagent call:
 @react-feature-workflow:block-builder https://figma.com/design/XX/landing?node-id=42-15 into src/widgets/hero
 ```
 
-Builds the block from shadcn primitives and semantic tokens — flex/grid, no `fixed` — and reports every design value that had no token. Running `analyze` on a single block tells you exactly this and stops.
+Builds the block from shadcn primitives and semantic tokens — flex/grid, no `fixed` — and reports every design value that had no token. Running `spec` on a single block tells you exactly this and stops.
 
 ### A page — a landing assembled from blocks
 
 ```
-/react-feature-workflow:analyze build the landing from https://figma.com/design/XX/landing
+/react-feature-workflow:spec layout: build the landing from https://figma.com/design/XX/landing
+/react-feature-workflow:plan
 ```
 
 The interview is short: page name, one Figma node URL **per block** (a block is a section — hero, pricing, footer), which composites repeat, text/i18n, and what "done" means. No API questions — there is no data. Then:
@@ -44,27 +45,35 @@ Each block goes to `block-builder` — one subagent call per block, so the Figma
 
 ### A feature — a table, a chat, a checkout: anything with data and state
 
-Three commands, **each in a fresh session**:
+Four commands, **each in a fresh session**:
 
 ```
-/react-feature-workflow:analyze add comments to articles
+/react-feature-workflow:spec add comments to articles
 ```
 
-Claude asks a handful of questions, one at a time, each with a recommended answer: name, endpoints (a Swagger URL plus a list like `GET /articles/{id}/comments`), the UI and its loading/empty/error states, permissions, and what counts as done. It doesn't ask what it can find out itself. It writes two files to `.planning/comments/`:
+Claude rates what the request leaves unsaid — data, UX flow, UI states, permissions, persistence, failures, non-functional, done signals — asks at most five questions, one at a time, each with a recommended answer, and records the rest as assumptions. It doesn't ask what it can find out itself and it doesn't ask HOW. It writes `.planning/comments/SPEC.md`: behaviour as `R-` rules, UI states, permissions, failure scenarios, and 3–9 acceptance criteria that cite the rules they prove.
 
-- `contract.md` — request/response shapes for the endpoints you named, pulled from your OpenAPI spec with `$ref`s resolved;
-- `PLAN.md` — modules in build order: types, queries and what they invalidate, form schemas, components with their states, i18n keys, acceptance criteria.
+**Read the spec** — it's a normal markdown file, it holds no code, and this is the cheapest point to change your mind. Then:
 
-**Read the plan** — it's a normal markdown file; fix it before any code exists. Then, in fresh sessions:
+```
+/react-feature-workflow:plan
+```
+
+It asks only what the spec and the codebase can't answer (a dependency, a name collision, a HOW the spec left open) and writes two more files to `.planning/comments/`:
+
+- `contract.md` — request/response shapes for the endpoints the spec names, pulled from your OpenAPI spec with `$ref`s resolved;
+- `PLAN.md` — modules in build order with what each one serves, types, queries and what they invalidate, form schemas, boundaries, a Coverage table per acceptance criterion, and a readiness check before any code exists.
+
+Then, in fresh sessions:
 
 ```
 /react-feature-workflow:implement    # builds the plan in order, runs your typecheck
 /react-feature-workflow:review       # judges the diff's decisions against the convention skills and the sibling module
 ```
 
-`implement` follows your project's conventions (it reads `CLAUDE.md` and outlines one existing module of the same kind rather than reading it), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` judges the decisions in the diff — against the convention skill that governs each hunk, the module it should resemble, the placement rules you state, and six questions that find AI slop (was this generality, this helper, this state, this layer, this fallback, this second way of doing things necessary here) — and explains every finding in three parts: what, why not here, fix. It runs your own typecheck, lint and tests and never edits; `refine` applies. Not correctness, not security, not generic simplification — Claude Code's `/code-review`, `/security-review` and `/simplify` cover those. Narrow it with `/react-feature-workflow:review skills` (or `structure`, `sibling`, `slop`).
+`implement` reads `SPEC.md` for behaviour and `PLAN.md` for the modules, follows your project's conventions (it reads `CLAUDE.md` and outlines one existing module of the same kind rather than reading it), delegates presentational blocks with a Figma URL to `block-builder`, and finishes by telling you what it built and what it skipped. `review` judges the decisions in the diff — against the convention skill that governs each hunk, the module it should resemble, the placement rules you state, and six questions that find AI slop (was this generality, this helper, this state, this layer, this fallback, this second way of doing things necessary here) — and explains every finding in three parts: what, why not here, fix. It runs your own typecheck, lint and tests and never edits; `refine` applies. Not correctness, not security, not generic simplification — Claude Code's `/code-review`, `/security-review` and `/simplify` cover those. Narrow it with `/react-feature-workflow:review skills` (or `structure`, `sibling`, `slop`).
 
-Saw something wrong before running `review`? `/react-feature-workflow:refine move the filters above the table` applies your corrections against the same plan — and when you changed your mind rather than the implementation missing something, it updates `PLAN.md` too, so `review` still verifies the current truth. Anything that is really new scope (a new module, endpoint or dependency) it routes back to `analyze` instead of quietly absorbing it.
+Saw something wrong before running `review`? `/react-feature-workflow:refine move the filters above the table` applies your corrections against the same plan — and when you changed your mind rather than the implementation missing something, it updates `SPEC.md` (behaviour) or `PLAN.md` (structure) too, so the next stage verifies the current truth. Anything that is really new scope (a new module, endpoint or dependency) it routes back to `spec` or `plan` instead of quietly absorbing it.
 
 ### A bug
 
@@ -82,7 +91,8 @@ A subagent reproduces it, finds the cause and fixes it with the smallest change.
 
 | Command | What it does |
 |---|---|
-| `/react-feature-workflow:analyze` | Classifies the request, interviews you accordingly, writes `PLAN.md` + a trimmed API contract |
+| `/react-feature-workflow:spec` | Classifies the request, hunts the gaps it leaves unsaid, writes `SPEC.md`: behaviour, acceptance criteria, assumptions |
+| `/react-feature-workflow:plan` | Turns the spec into `PLAN.md` + a trimmed API contract, every module citing the criteria it serves, with a readiness check |
 | `/react-feature-workflow:implement` | Builds everything in the plan, in order, and runs your typecheck |
 | `/react-feature-workflow:refine` | Applies your corrections to what `implement` built, keeping `PLAN.md` in sync |
 | `/react-feature-workflow:review` | Judges the diff's decisions against the convention skills, the sibling module, the structure rules and six slop questions; reports, never edits |
@@ -119,7 +129,7 @@ Reads the Figma variables, maps them onto shadcn's semantic tokens by role, writ
 
 - Run `implement` and `review` in **fresh sessions**. Everything they need is in `.planning/<name>/`; the planning conversation adds nothing to the build, and a session reviewing code it just wrote is biased toward approving it.
 - Point at the plan by path, don't paste it.
-- One `.planning/<name>/` folder per unit of work, so `implement` has a single authoritative brief.
+- One `.planning/<name>/` folder per unit of work: `SPEC.md` for behaviour, `PLAN.md` for structure, `contract.md` for shapes.
 - Keep the agents as subagents: they read far more than they report.
 - One concern per session — a bug fix folded into a feature build produces a diff `review` can't check against the plan.
 

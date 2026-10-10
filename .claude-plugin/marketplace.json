@@ -15,7 +15,7 @@
       },
       "displayName": "React Feature Workflow",
       "source": "./plugins/react-feature-workflow",
-      "description": "Build features from a plan, not one long chat: /analyze writes PLAN.md + an API contract, /implement builds it, /review checks the diff against the convention skills, the sibling module and a slop catalogue — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
+      "description": "Build features from a spec, not one long chat: /spec writes the behaviour a human signs off, /plan turns it into modules that cite its acceptance criteria plus a sliced API contract, /implement builds them, /review checks the diff against the convention skills — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
       "category": "workflow",
       "keywords": [
         "planning",

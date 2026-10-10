@@ -1,6 +1,6 @@
 ---
 name: implement
-description: Implements a planned unit of work end-to-end in one pass — types, data layer, schemas, UI, wiring — from `.planning/[name]/PLAN.md`. Use when the user wants to build, implement, or execute a plan, feature, module or issue, or points at a `.planning/*/PLAN.md`. Invoke it before reading the plan or exploring the code — it says what to read and in what order. Runs in the main session; do not fan out to subagents.
+description: Implements a planned unit of work end-to-end in one pass — types, data layer, schemas, UI, wiring — from `.planning/[name]/SPEC.md` and `PLAN.md`. Use when the user wants to build, implement, or execute a plan, feature, module or issue, or points at a `.planning/*/PLAN.md`. Invoke it before reading the plan or exploring the code — it says what to read and in what order. Runs in the main session; do not fan out to subagents.
 ---
 
 # Implement
@@ -15,7 +15,8 @@ UI that is inseparable from data and state — a table's cells, a chat's message
 
 ## Inputs
 
-- `.planning/[name]/PLAN.md` — the whole brief. Missing? Ask the user to run `/react-feature-workflow:analyze`, or take a direct brief for a small change.
+- `.planning/[name]/SPEC.md` — **authoritative for behaviour**: the `R-` rules, UI states, permissions, unchanged behaviour and the acceptance criteria the work is judged by. Read it whole; it is capped for that. The plan cites `AC-` ids rather than copying them, so a behaviour question is answered here, never from the plan's prose.
+- `.planning/[name]/PLAN.md` — the HOW: modules in build order, what each serves, boundaries, decisions. Missing? Ask the user to run `/react-feature-workflow:spec` and then `/react-feature-workflow:plan`, or take a direct brief for a small change. A plan written before specs existed carries its own acceptance criteria — use those and say the spec is missing; do not stop for it.
 - `.planning/[name]/contract.md` — **authoritative for every request/response shape.** Read it; never open the raw OpenAPI/Swagger file it names as its `Source:` — not with `Read`, not with `cat` or `jq` — and never invent a field it does not list. The slice already carries every field, required flag, enum and format the spec has for these endpoints.
 - `.planning/[name]/DESIGN.md` when the plan names a design — **authoritative for tokens, spacing, layout and measurements. Never call Figma MCP for anything it answers; its saved screenshots are read with `Read`, not re-fetched.** The only Figma calls during implementation are `block-builder` delegations — one per presentational block; a static shell needs the real node payload, a slice can't replace it. A value flagged "no match" is a real gap: surface it, don't invent one.
 
@@ -48,7 +49,7 @@ Three hooks enforce the mechanical half of this — the spec stays closed, a lon
 7. Public exports / barrels.
 8. Routes and pages last, once the modules they mount exist.
 
-If the contract disagrees with the plan's prose, **the contract wins** — say so, then follow it.
+If the contract disagrees with the plan's prose, **the contract wins** — say so, then follow it. If the plan disagrees with `SPEC.md` about behaviour, the spec wins the same way: build the behaviour the spec states and report the deviation.
 
 ## Rules
 
@@ -62,7 +63,7 @@ If the contract disagrees with the plan's prose, **the contract wins** — say s
 
 ## Verify
 
-Run the project's typecheck. That is the whole verification. Do not run a full build or lint unless the project has no other check — pre-commit hooks and CI own those. Do not start the dev server, open a browser, or invoke the `run` skill: what the feature does in a browser is checked by `/react-feature-workflow:review` against the plan's acceptance criteria, and by the user. When the typecheck passes, write the report and stop.
+Run the project's typecheck. That is the whole verification. Do not run a full build or lint unless the project has no other check — pre-commit hooks and CI own those. Do not start the dev server, open a browser, or invoke the `run` skill: what the feature does in a browser is the user's to check, and anything a static read cannot establish is reported as such rather than claimed. When the typecheck passes, write the report and stop.
 
 ## Output
 

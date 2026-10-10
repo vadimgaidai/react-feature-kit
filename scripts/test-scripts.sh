@@ -210,14 +210,15 @@ for case_file in plugins/*/evals/*/case.yaml; do
   mkdir -p "$sandbox"
   if (cd "$sandbox" && bash "$script") >"$WORK/err" 2>&1; then
     # A scaffold that creates .planning/ (react-feature-workflow's fixtures) must put a
-    # PLAN.md in it — that's the file `implement`/`review` read. A scaffold for a plugin
-    # with no planning workflow (e.g. feature-folders, testing hooks only) has no
-    # .planning/ at all, and running cleanly is the whole bar for it.
+    # stage file in it — SPEC.md for a case that starts at `plan`, PLAN.md for one that
+    # starts at `implement` or `review`. A scaffold for a plugin with no planning workflow
+    # (e.g. feature-folders, testing hooks only) has no .planning/ at all, and running
+    # cleanly is the whole bar for it.
     if [ -d "$sandbox/.planning" ]; then
-      if ls "$sandbox"/.planning/*/PLAN.md >/dev/null 2>&1; then
-        ok "$case_name: scaffold runs and writes a PLAN.md"
+      if ls "$sandbox"/.planning/*/PLAN.md >/dev/null 2>&1 || ls "$sandbox"/.planning/*/SPEC.md >/dev/null 2>&1; then
+        ok "$case_name: scaffold runs and writes a stage file"
       else
-        bad "$case_name: scaffold ran but wrote no .planning/*/PLAN.md"
+        bad "$case_name: scaffold ran but wrote no .planning/*/{SPEC,PLAN}.md"
       fi
     else
       ok "$case_name: scaffold runs"
