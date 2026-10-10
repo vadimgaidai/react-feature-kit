@@ -4,7 +4,7 @@
 
 ```bash
 claude --plugin-dir ./plugins/react-feature-workflow
-/reload-plugins        # re-read the directories after an edit
+/reload-plugins        # after editing a skill or hook
 ```
 
 ## Checks
@@ -13,24 +13,32 @@ claude --plugin-dir ./plugins/react-feature-workflow
 ./scripts/check-all.sh
 ```
 
-Runs everything CI runs: manifest ↔ marketplace consistency, skill/agent frontmatter, hook scripts exist and are executable, relative markdown links resolve, no orphaned `references/` files, and every `.sh`/`.mjs` parses. CI (`.github/workflows/checks.yml`) calls the same script, so the two cannot drift.
+Manifests match the marketplace, every skill and agent has frontmatter, hook scripts exist and are executable, markdown links resolve, every `references/` file is mentioned by its skill, every `.sh` and `.mjs` parses, every eval fixture scaffolds. CI runs the same script.
 
-`claude plugin validate plugins/<name>` covers the manifest only; `claude plugin eval` (cases under `evals/`) is the behavioral check.
+Behaviour is checked by evals:
+
+```bash
+claude plugin eval plugins/react-feature-workflow --scaffold --allow-tools Bash Write Edit \
+  --ablation none --case review-deslop
+```
+
+One `--case` per run. Cases and graders are described in [plugins/react-feature-workflow/evals/README.md](./plugins/react-feature-workflow/evals/README.md).
 
 ## Releasing
 
-**Bump the version or the change never ships.** `claude plugin update` compares `version` against the installed copy and copies nothing if it matches, ignoring commits entirely. Bump it in both `plugins/<name>/.claude-plugin/plugin.json` and the marketplace entry — `claude plugin tag` refuses a release where the two disagree, and `check-all.sh` fails on the mismatch too.
+Bump the version or nothing ships. `claude plugin update` compares `version` with the installed copy and skips the update when they match. The version lives in `plugins/<name>/.claude-plugin/plugin.json` and in `.claude-plugin/marketplace.json`; `check-all.sh` fails when they differ.
 
 ## Layout
 
 ```
-.claude-plugin/marketplace.json   # the marketplace: both plugins, versions, descriptions
+.claude-plugin/marketplace.json   plugins, versions, descriptions
 plugins/<name>/
-  .claude-plugin/plugin.json      # plugin manifest (name/version must match the marketplace entry)
-  skills/<skill>/SKILL.md         # frontmatter name must match the directory
-  skills/<skill>/references/      # every file here must be mentioned in its SKILL.md
-  agents/*.md                     # frontmatter needs name + description
-  hooks/hooks.json                # commands point into hooks/scripts/, scripts stay executable
-docs/                             # user-facing docs beyond the README
-scripts/                          # check-all.sh + validate.mjs
+  .claude-plugin/plugin.json      name and version must match the marketplace entry
+  skills/<skill>/SKILL.md         frontmatter name must match the directory
+  skills/<skill>/references/      worked shapes; each file is linked from its SKILL.md
+  agents/*.md                     frontmatter: name and description
+  hooks/hooks.json                commands point into hooks/scripts/
+  evals/<case>/                   case.yaml, scaffold.sh, graders/
+docs/                             getting started, use cases, design
+scripts/                          check-all.sh, validate.mjs, test-scripts.sh
 ```

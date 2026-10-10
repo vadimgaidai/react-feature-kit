@@ -1,81 +1,29 @@
 # Feature Folders
 
-A [Claude Code](https://claude.com/claude-code) plugin for projects that aren't
-Feature-Sliced Design but still want "where does this go?" answered by a
-table instead of a guess: a `structure` skill with global buckets
-(`components/`, `hooks/`, `providers/`, `lib/`, `config/`, `api/`) plus
-feature/page/layout modules, a scaffolder, and hooks that reject a new file
-outside them or a wrong filename — not in review after.
-
-Unlike [`feature-sliced-design`](../feature-sliced-design), this plugin has no
-layer hierarchy and no import-direction rule, and its placement and naming
-hooks only block **new** files — editing or overwriting a file that already
-exists always passes. The content hook is different: a domain type, an
-as-const constant, a schema, a hook or an HTTP call landing in a UI file is
-new slop wherever it lands, so that hook checks old files and new alike.
-Drop it into a project with years of existing structure and it steers new
-work without fighting the old tree. Don't install both plugins in the same
-project; pick the one that matches the project's actual architecture.
+Structure for React projects that are not Feature-Sliced Design: global buckets (`components/`, `hooks/`, `providers/`, `lib/`, `config/`, `api/`) plus `features/`, `pages/` and `layouts/` modules. A skill answers "local or global?"; hooks refuse a new file that lands outside the buckets.
 
 ## Install
 
 ```bash
-# from the repository root
 claude plugin marketplace add vadimgaidai/react-feature-kit
 claude plugin install feature-folders@vadimgaidai --scope project
 ```
 
-Keep `--scope project`: at the default `user` scope these hooks would apply
-in every project you open. Commit the `.claude/settings.json` the install
-writes, and install `jq` first — see [Requirements](#requirements). Details:
-[Getting started](../../docs/GETTING-STARTED.md).
+Needs `jq`. Without it the hooks exit silently and nothing is blocked. Keep `--scope project`. Do not install together with `feature-sliced-design`.
 
-## What's inside
+## What the hooks refuse
 
-| Component | What it does |
-|---|---|
-| `structure` skill | Global buckets, the page/layout/feature ladder, the global-vs-local placement table, and reference code for each kind of module (feature, page, layout, api, provider, component, barrel) |
-| `scaffold.sh` | Creates a feature/page/layout/api module skeleton in one shell call. Checks kebab-case, refuses to touch an existing module |
-| `structure-check.sh` | The script-checkable half of `structure/SKILL.md`'s `## Reviewing` section: a module missing its barrel, a barrel re-exporting a file that does not exist, a `use-*.ts` outside `hooks/` — run by `react-feature-workflow`'s `review` over changed files, not a hook |
-| `bucket-placement-validator` hook | Rejects a **new** file written outside a recognized top-level bucket, with a pointer to where that role actually lives. Never blocks an edit to a file that already exists |
-| `kebab-case-validator` hook | Rejects a filename that isn't kebab-case |
-| `barrel-import-validator` hook | Rejects a barrel import of `@/components/ui` (direct sub-path imports only) |
-| `model-placement-validator` hook | Rejects a domain type, an as-const constant, a zod schema, a hook or an HTTP call defined in a UI file, and a feature/page with its own `api/` folder — checks old files and new, since new content is new slop wherever it lands |
+- a **new** file outside `app/`, `pages/`, `layouts/`, `features/`, `components/`, `hooks/`, `providers/`, `lib/`, `config/`, `api/`, `assets/`. `src/utils/format.ts` is pointed to `src/lib/`, `src/services/comments.ts` to `src/api/comments/`
+- a filename that is not kebab-case
+- an import through the `@/components/ui` barrel instead of `@/components/ui/button`
+- a domain type, an `as const` constant, a zod schema, a hook or an HTTP call written into a component file; a feature or page with its own `api/` folder
 
-## Usage
+Placement and naming check new files only. Editing a file that existed before the plugin always passes, so a project with years of structure is not fought. The content rule checks old files too: a domain type pasted into an old component is still new.
 
-The skill loads itself when Claude is creating a module, deciding whether a
-component/hook/type/constant is local or global, or placing an API call — you
-don't invoke it by name. Ask Claude to "add a comments feature" and it checks
-the ladder (page, layout, or feature?), the table (local or global?), and
-places the API call under `src/api/comments/` instead of guessing.
+## What the skill answers
 
-The hooks need nothing from you:
+Whether something is a page, a layout or a feature, in three checks. Whether a component, hook, type, constant or function is local to a module or global, by a table with one condition per role. Where an API call lives (`src/api/<resource>/`, never inside a module). Reference code for each kind of module.
 
-- a new file dropped outside `app/`, `pages/`, `layouts/`, `features/`,
-  `components/`, `hooks/`, `providers/`, `lib/`, `config/`, `api/` or
-  `assets/` is rejected with where it belongs — `src/utils/format.ts` points
-  to `src/lib/`, `src/services/comments.ts` points to `src/api/comments/`;
-- editing `src/utils/format.ts` because it already existed before this plugin
-  was installed is never touched by the hook — only new files are checked;
-- `UserCard.tsx` is rejected in favor of `user-card.tsx`;
-- importing `Button` via the `@/components/ui` barrel is rejected in favor of
-  the direct path `@/components/ui/button`;
-- a `export interface IComment { ... }` written into a `components/*.tsx` file
-  is rejected in favor of `<module>/types.ts`, whether that file is new or
-  years old.
+`scaffold.sh` creates a feature, page, layout or api module skeleton and refuses to touch an existing one. `structure-check.sh` finds a module without a barrel, a barrel re-exporting a missing file, a `use-*.ts` outside `hooks/`; `react-feature-workflow`'s `review` runs it over changed files.
 
-## Requirements
-
-The four hooks shell out to `jq`. Without it they exit quietly instead of
-blocking a bad write — install `jq` first.
-
-## Fits with
-
-Pairs with [`react-feature-workflow`](../react-feature-workflow) (plan/build/review
-plus the React conventions) from the same marketplace, but works alone in any
-React project.
-
-## License
-
-MIT. Part of [React Feature Kit](https://github.com/vadimgaidai/react-feature-kit).
+Works alone or with [react-feature-workflow](../react-feature-workflow). MIT.
