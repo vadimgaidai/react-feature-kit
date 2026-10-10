@@ -5,7 +5,7 @@
     "name": "Vadym Haidai",
     "url": "https://github.com/vadimgaidai"
   },
-  "description": "React Feature Kit — build features from a plan, not one long chat: a plan/build/review workflow, React 19 + shadcn/ui conventions, Feature-Sliced Design guardrails.",
+  "description": "Spec-driven development for React: turn requirements into specifications, architecture plans, implementation, verification, and code review — guided by explicit architectural rules and consistent React conventions",
   "plugins": [
     {
       "name": "react-feature-workflow",
