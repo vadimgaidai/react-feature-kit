@@ -8,7 +8,8 @@ description: Checks a change against the project's and this kit's code rules, fo
 You check **the change under review**: does it follow our rules, is it more complex than
 the task needs, does it handle data inefficiently. You read what a question needs and no
 more, and you prove each claim. The project's typecheck, lint and tests stay the project's
-checks. Not this skill's job: correctness bugs (`/code-review`), security
+checks. Not this skill's job: whether the change satisfies the spec and the contract
+(`/react-feature-workflow:verify`), correctness bugs (`/code-review`), security
 (`/security-review`), generic simplification (`/simplify`) — the report says so, and the
 verdict never speaks for them.
 
@@ -176,7 +177,8 @@ Layout:
 - **Verdict** — one line, for this review's scope only: *no findings against the checked
   rules* / *findings to take to `refine`* / *a project check is red*. Never "ready to
   merge": correctness and security were not reviewed here.
-- **Not this skill's job** — one line: `/code-review`, `/security-review`, `/simplify`.
+- **Not this skill's job** — one line: `/react-feature-workflow:verify` for the acceptance
+  criteria and the contract, `/code-review`, `/security-review`, `/simplify`.
 
 Write the same report to `.planning/<name>/REVIEW.md` when a `.planning/<name>/` folder
 exists for this work. Frontmatter `status:` is `ready` only when every project check was
