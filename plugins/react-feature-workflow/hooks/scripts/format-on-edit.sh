@@ -1,22 +1,19 @@
 #!/bin/bash
-# PostToolUse(Edit|Write): auto-formats the touched file with Prettier.
+# PostToolUse(Edit|Write): auto-formats the touched file with the project's own Prettier.
 # Agents never spend tokens on formatting; the reviewer never checks it.
 
 INPUT=$(cat)
-
-FILE=$(printf '%s' "$INPUT" | node -e "
-let d = '';
-process.stdin.on('data', (c) => (d += c)).on('end', () => {
-  try { process.stdout.write(JSON.parse(d).tool_input?.file_path || '') } catch {}
-})")
+FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty')
 
 [ -z "$FILE" ] && exit 0
+
+PRETTIER="${CLAUDE_PROJECT_DIR:-.}/node_modules/.bin/prettier"
 
 case "$FILE" in
   */node_modules/*|*/dist/*|*/.git/*) exit 0 ;;
   *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.scss|*.html)
-    if [ -f "$FILE" ]; then
-      cd "${CLAUDE_PROJECT_DIR:-.}" && npx --no-install prettier --write "$FILE" >/dev/null 2>&1 || true
+    if [ -f "$FILE" ] && [ -x "$PRETTIER" ]; then
+      "$PRETTIER" --write "$FILE" >/dev/null 2>&1 || true
     fi
     ;;
 esac

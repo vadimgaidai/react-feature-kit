@@ -70,7 +70,7 @@ Load on their own while Claude writes the matching layer. `review` reads their `
 - `@react-feature-workflow:theme-sync <figma-url>` maps Figma variables onto shadcn tokens, light and dark.
 - `@react-feature-workflow:bug-fixer <description>` reproduces one bug and fixes it with the smallest change.
 
-Three `PreToolUse` hooks refuse what the skills rule out: reading the raw OpenAPI file a contract was cut from, reading a source file over 300 lines without a `limit`, dumping source files through the shell. `RFW_GUARDS=off` disables them for a session. A `PostToolUse` hook runs Prettier on every file written.
+Three `PreToolUse` hooks refuse what the skills rule out: reading the raw OpenAPI file a contract was cut from, reading a source file over 300 lines without a `limit`, dumping source files through the shell. `RFW_GUARDS=off` disables them for a session. A `PostToolUse` hook runs the project's own Prettier (`node_modules/.bin/prettier`) on every file written, and does nothing when the project has none.
 
 ## Requirements
 
