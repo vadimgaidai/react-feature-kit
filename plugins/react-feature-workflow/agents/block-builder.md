@@ -45,7 +45,7 @@ The returned code is React + Tailwind **reference**, not final code. Honor its h
 ## Assets
 
 - Icons and images come as exported asset URLs. Render from them — never hand-write `<svg>` paths, never leave a placeholder.
-- Asset URLs expire in ~7 days: download the bytes (`curl`) into the project's asset location and reference the committed file. Bash exists for this only.
+- Asset URLs expire in ~7 days: save the bytes with the Bash tool into the project's asset location and reference the committed file. Bash exists for this only.
 - Reuse a project icon component only when the glyph clearly matches — a name match is not enough.
 
 ## Output
