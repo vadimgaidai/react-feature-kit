@@ -14,13 +14,14 @@
   "documentationUrl": "https://github.com/vadimgaidai/react-feature-kit/tree/main/plugins/react-feature-workflow",
   "supportUrl": "https://github.com/vadimgaidai/react-feature-kit/issues",
   "keywords": [
-    "planning",
-    "implementation",
-    "code-review",
-    "openapi",
     "react",
-    "shadcn",
+    "spec-driven-development",
+    "feature-workflow",
+    "planning",
+    "code-review",
+    "typescript",
     "tanstack-query",
+    "shadcn-ui",
     "figma"
   ]
 }

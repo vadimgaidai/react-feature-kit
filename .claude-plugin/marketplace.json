@@ -18,13 +18,14 @@
       "description": "Build features from a spec, not one long chat: /spec writes the behaviour a human signs off, /plan turns it into modules that cite its acceptance criteria plus a sliced API contract, /implement builds them, /review checks the diff against the convention skills — each in a fresh session, so context stays small. Ships React 19, TanStack Query and shadcn/ui skills plus Figma agents.",
       "category": "workflow",
       "keywords": [
-        "planning",
-        "implementation",
-        "code-review",
-        "openapi",
         "react",
-        "shadcn",
+        "spec-driven-development",
+        "feature-workflow",
+        "planning",
+        "code-review",
+        "typescript",
         "tanstack-query",
+        "shadcn-ui",
         "figma"
       ],
       "version": "0.9.0"
@@ -39,7 +40,11 @@
       "source": "./plugins/feature-sliced-design",
       "description": "Feature-Sliced Design guardrails: a skill that answers layer and import questions, a module scaffolder, and hooks that reject a misplaced file, a wrong filename, an upward/sideways import, or model content in the wrong place before it is written — not in review after.",
       "category": "architecture",
-      "keywords": ["feature-sliced-design", "fsd", "architecture"],
+      "keywords": [
+        "feature-sliced-design",
+        "fsd",
+        "architecture"
+      ],
       "version": "0.3.1"
     },
     {
@@ -52,7 +57,12 @@
       "source": "./plugins/feature-folders",
       "description": "Architecture-agnostic structure guardrails: global buckets (components, hooks, providers, lib, config, api) plus feature/page/layout modules, a scaffolder, and hooks that reject a new file outside them, a wrong filename, or model content (a type, a constant, a schema, a hook, an HTTP call) in the wrong place — placement and naming only ever block a new file, so a legacy project stays untouched.",
       "category": "architecture",
-      "keywords": ["architecture", "react", "feature-folders", "structure"],
+      "keywords": [
+        "architecture",
+        "react",
+        "feature-folders",
+        "structure"
+      ],
       "version": "0.2.1"
     }
   ]
