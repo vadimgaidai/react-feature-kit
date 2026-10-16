@@ -19,7 +19,7 @@ Commit the `.claude/settings.json` it writes. Scope and requirements: [Getting s
 | `/react-feature-workflow:plan` | `SPEC.md`, `CLAUDE.md`, the structure skill | `PLAN.md`: modules in build order, each citing the criteria it serves; `contract.md` cut from your OpenAPI file; `DESIGN.md` from Figma |
 | `/react-feature-workflow:implement` | `SPEC.md`, `PLAN.md`, `contract.md`, `DESIGN.md`, one sibling module outlined | code, then your typecheck |
 | `/react-feature-workflow:verify` | `SPEC.md`, the plan's coverage table, the diff | `VERIFY.md`: each criterion pass, fail or unverifiable, with the evidence: a command that ran, a `file:line`, or manual steps |
-| `/react-feature-workflow:review` | the diff file by file, the rules the project states, the convention skills | `REVIEW.md`: style violations with the rule and the line, engineering remarks with the argument |
+| `/react-feature-workflow:review` | the diff file by file, the rules the project states, the convention skills | `REVIEW.md`: style violations with the rule and the line, engineering remarks with the argument, each naming the rule it cites |
 | `/react-feature-workflow:refine` | `VERIFY.md`, `REVIEW.md`, your remarks | code; `SPEC.md` when the behaviour changed, `PLAN.md` when only the structure did |
 
 Nothing edits code except `implement` and `refine`. `verify` and `review` report.

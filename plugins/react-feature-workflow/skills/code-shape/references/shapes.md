@@ -243,6 +243,28 @@ formatAmount(total, { withCurrency: true })
 Or two functions: `formatAmount` and `formatPrice`. The call site `(x, true)` tells a reader
 nothing.
 
+## A setter takes a patch
+
+```ts
+const writeFilters = (filters: I[Entity]Filters) => …
+writeFilters({ ...filters, status })
+writeFilters({ ...filters, page: filters.page + 1 })
+```
+
+```ts
+const setFilters = (patch: Partial<I[Entity]Filters>) => …
+setFilters({ status })
+setFilters({ page: filters.page + 1 })
+```
+
+Adding `sort` to the filters touches the setter and nothing else; with the whole-state
+shape every call site re-spreads fields it does not change, and a call that forgets the
+spread silently resets them. Same values written for the same inputs: the setter merges
+the patch over the current state. A hook that keeps the filters in the URL is this shape
+over `useSearchParams` — [routing/references/search-params.md](../../routing/references/search-params.md),
+including the variant where a filter's off value (`archived: false`, `tags: []`) means
+*no param*.
+
 ## Names
 
 ```ts
@@ -262,6 +284,27 @@ const formatShortDate = …
 
 A name carries the domain word; the type is already in the type. `Manager`, `Helper`, `Utils`
 and `Service` are the absence of a name. A `2` means the author did not grep.
+
+## The name covers the behaviour
+
+```ts
+const parseTags = (raw: string | null): Array<string> =>
+  (raw ?? "").split(",").filter(Boolean).sort()
+```
+
+```ts
+const parseTags = (raw: string | null): Array<string> =>
+  (raw ?? "").split(",").filter(Boolean)
+
+const queryKey = [entity]Keys.list({ ...filters, tags: [...filters.tags].sort() })
+```
+
+A reader of `parseTags` expects the param's values back; the `.sort()` reorders them, and
+every caller that renders the list inherits an order the input never had. The sort moves to
+the one place that needs a canonical order — the query key, so `?tags=b,a` and `?tags=a,b`
+share a cache entry — on a local copy. When the ordering *is* the point for every caller,
+the name says so: `parseSortedTags`. Same for a `get*` that caches or a `format*` that also
+trims: the name tells the whole story or the body does less.
 
 ## Extract for a name, not for size
 
@@ -288,7 +331,30 @@ One caller too, and it stays: `toListRow` names an operation the `map` call woul
 spell out inline. The test is whether the name tells the reader something, not how many
 callers there are or how long the parent is.
 
-## Magic numbers
+## A pure helper beside a hook
+
+```ts
+// use-[entity]-filters.ts
+const parseTags = (raw: string | null): Array<[Entity]Tag> =>
+  (raw ?? "").split(",").filter(is[Entity]Tag)
+
+const toTagsParam = (tags: Array<[Entity]Tag>): string | undefined =>
+  tags.length > 0 ? tags.join(",") : undefined
+
+export const use[Entity]Filters = () => { … }
+```
+
+`parseTags` and `toTagsParam` use no React, carry names a reader looks up, and are the part
+of the hook a test would want without rendering anything. They move to where the
+structure skill puts the module's pure functions (`feature-folders`: the placement table's
+Function row, a local helper file in the module; `src/lib/` only when a second module needs
+it), and the hook imports them. The hook file keeps what owns React state.
+
+What stays inline: a one-expression mapping used once (`const page = Number(raw ?? 1)`), an
+arrow the hook's own `useMemo` wraps. The rule is about a helper that is pure *and* named
+*and* more than one expression — not about every arrow above a hook.
+
+## Magic numbers and boundary literals
 
 ```ts
 if (body.length > 2000) …
@@ -302,3 +368,21 @@ const AUTOSAVE_DELAY_MS = 500
 
 A number with a domain meaning gets the domain's name, in `constants.ts` when a second file
 needs it. `0`, `1` and an array index are not magic.
+
+```ts
+const isArchived = searchParams.get("archived") === "true"
+next.set("archived", "true")
+const draft = localStorage.getItem("[entity]-draft")
+```
+
+```ts
+const ARCHIVED_PARAM = "archived"
+const PARAM_ON = "true"
+const [ENTITY]_DRAFT_KEY = "[entity]-draft"
+```
+
+A string that another side reads back — a search-param name or value, a storage key, a
+header, a discriminator in the URL — is a protocol, and the two sites that must agree on
+it agree through one name. Not every string: a translation key, a `className`, an `as
+const` member, a label passed within the code's own calls carries its meaning in place and
+stays a literal.

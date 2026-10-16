@@ -1,6 +1,6 @@
 ---
 name: routing
-description: URL state, search params, Back/Forward, nested routes, and how a route meets the query cache. Use when building navigation, a loader, search params, pagination restored from the URL, or a route-level loading/error state.
+description: URL state, search params, Back/Forward, nested routes, and how a route meets the query cache. Use when building or reviewing navigation, a loader, search params, pagination restored from the URL, a route-level loading/error state, or any hook (`use-*-filters`, `use-*-sort`) whose values come from the URL, whatever folder it sits in.
 ---
 
 # Routing
@@ -20,7 +20,8 @@ the mechanism names below (`useSearchParams`, `useNavigation`, `errorElement` vs
   same screen the sender saw. State derived from the URL is read from it on every render, not
   copied into `useState` once on mount — a copy stops tracking Back and Forward.
 - Updating one search param merges with the current ones; it never replaces the whole search
-  string, or a filter change silently drops the sort the user had picked.
+  string, or a filter change silently drops the sort the user had picked. The hook's setter
+  takes a patch of the fields that change, never the whole filter state re-passed.
 - Back and Forward changing the URL must change the rendered UI with no extra step — if it
   doesn't, something read the URL into state once instead of on every render.
 
@@ -42,6 +43,9 @@ In order of how often it hurts:
 
 - a filter, sort or page number not restored from the URL on load
 - updating one search param that drops the others instead of merging
+- a filters setter that takes the whole state instead of a patch, or that writes a filter's
+  off value (`false`, `[]`) as a param instead of deleting it
+  (`references/search-params.md`)
 - URL-derived state copied into `useState` once instead of read on every render
 - Back/Forward not changing the rendered UI
 - a loader and a component's query holding two independent copies of the same data

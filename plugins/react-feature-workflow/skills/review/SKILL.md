@@ -59,7 +59,9 @@ names, and never a plugin's presence as the precondition for a rule written down
   search param or navigation hook → `routing`; a test file → `react-testing`; `try`/`catch`,
   `onError`, a toast, `??`/`?.` on data → `error-handling`; a type, cast, narrowing or
   `switch` on a union → `typescript`; branching, a helper, a loop over a collection →
-  `code-shape`. Read that skill's `## Reviewing` section; open a reference file only for the
+  `code-shape`. Content decides, not the folder or the file name: a `use-*-filters.ts` in
+  `hooks/` whose values come from `useSearchParams` is `routing` (and `code-shape` for its
+  helpers). Read that skill's `## Reviewing` section; open a reference file only for the
   one shape a finding needs to cite.
 - The project's checks, as `package.json` defines them: typecheck, lint, tests. Run them
   without installing anything; record pass / fail and the output tail under **Checks**.
@@ -148,6 +150,10 @@ Never a finding by itself: a single caller, an intermediate variable, a long fil
 `try/catch`, an optional chain, a fallback. Each needs the argument above or it is not
 reported.
 
+Both kinds name the rule they cite: a skill section (`code-shape §Boolean parameters`,
+`routing/references/search-params.md §A hook that merges, never replaces`), a `CLAUDE.md`
+or rules-file line, or one of the seven questions above.
+
 ## 5 — Check before you report
 
 Each candidate passes five questions or it is dropped, or moved to open questions with
@@ -172,9 +178,10 @@ Layout:
 - **Checks** — each project check with pass / fail and its output tail as run in this
   session; a claim with no command output behind it is not made. The structure check's
   lines, when one ran. What was not run, and why.
-- **Findings** — `file:line` → problem → rule or concrete consequence → proposed change.
-  Style violations first, then engineering remarks, grouped by angle. Every confirmed
-  finding is listed; none is cut for a cap, and none is added for count.
+- **Findings** — `file:line` → problem → the rule, cited by skill and section, with the
+  concrete consequence for an engineering remark → proposed change. Style violations
+  first, then engineering remarks, grouped by angle. Every confirmed finding is listed;
+  none is cut for a cap, and none is added for count.
 - **Open questions** — candidates with a real mechanism and an unverified fact, each with
   what would settle it. Apart from findings, never mixed in.
 - **Verdict** — one line, for this review's scope only: *no findings against the checked

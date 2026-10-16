@@ -38,6 +38,22 @@ House style, not laws of programming. Every rule with the shape it replaces:
 - **Return explicitly when the body branches.** Implicit arrow returns are for one
   expression. A branching body writes the value in every `return` and annotates the type.
 - **No boolean parameters.** Split the function, or fold the flag into the options object.
+- **A setter takes a patch.** A function that updates a group of fields — filters, a
+  settings object, a draft — takes `Partial<State>`, never the whole state re-passed with
+  one field changed. The test: adding a field touches the setter and no existing call
+  site. A hook whose state lives in the URL is this shape over `useSearchParams`:
+  `routing/references/search-params.md`.
+- **A literal that crosses a boundary is named.** A search-param value, a storage key, a
+  header, a discriminator read back from the URL — the string the other side reads gets a
+  constant beside the code that reads it. A translation key, a `className`, an `as const`
+  member or a string the code only passes to itself is not.
+- **The name covers the behaviour.** `parse*`, `get*`, `format*` promise one operation. A
+  body that also sorts, dedupes in a way callers rely on, or caches either loses the extra
+  behaviour or gets a name that says it.
+- **A pure helper leaves the hook file.** A named, module-scope function in a `use-*.ts`
+  that uses no React and does more than one expression is testable without React and lives
+  where the structure skill puts a module's pure functions. A one-expression parser used
+  once stays inline.
 - **Names say the domain, not the type.** `comments` not `data`, `isOwner` not `flag`,
   `submitComment` not `handleClick`. No `Helper`/`Manager`/`Utils`/`Service` suffix, no `2`
   suffix — grep first.
@@ -74,7 +90,13 @@ Engineering remarks, each with its argument:
 - depth past two levels where inverting a condition would flatten it
 - a generic or type-named identifier
 - a function that only forwards or exists to shorten its parent — why the name adds nothing
-- a magic number with a domain meaning
+- a magic number with a domain meaning, or a string literal read back across a boundary
+  (URL, storage, header) with no name
+- a setter that re-passes every field for a one-field change — with the call sites named
+- a `parse*` / `get*` / `format*` whose body sorts, dedupes or caches beyond its name — with
+  the caller that depends on it
+- a named, non-trivial pure function at module scope in a hook file — with where the
+  structure skill puts it
 
 Never a finding by itself: a single caller, an intermediate variable, a long file, a
 `try/catch`, an optional chain, a fallback, a loop. Each needs the argument above.
