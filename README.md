@@ -29,8 +29,8 @@ claude plugin install react-feature-workflow@vadimgaidai --scope project
 Then one structure plugin, if the project has a structure to enforce:
 
 ```bash
-claude plugin install feature-sliced-design@vadimgaidai --scope project   # FSD projects
-claude plugin install feature-folders@vadimgaidai --scope project         # everything else
+claude plugin install feature-sliced-design@vadimgaidai --scope project   # Feature-Sliced Design architecture
+claude plugin install feature-folders@vadimgaidai --scope project         # modular architecture (feature folders)
 ```
 
 `--scope project` matters. Without it the plugins load in every repository you open. Details in [docs/GETTING-STARTED.md](./docs/GETTING-STARTED.md).

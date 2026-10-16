@@ -5,8 +5,8 @@
 ```bash
 claude plugin marketplace add vadimgaidai/react-feature-kit
 claude plugin install react-feature-workflow@vadimgaidai --scope project
-claude plugin install feature-sliced-design@vadimgaidai --scope project   # FSD projects only
-claude plugin install feature-folders@vadimgaidai --scope project         # any other React project
+claude plugin install feature-sliced-design@vadimgaidai --scope project   # Feature-Sliced Design architecture
+claude plugin install feature-folders@vadimgaidai --scope project         # modular architecture (feature folders)
 ```
 
 Inside a session, `/plugin` opens a picker. Choose "Install for all collaborators on this repository (project scope)".
